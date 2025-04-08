@@ -1,0 +1,56 @@
+{
+    "name": "kirschbaum-development/laravel-loop",
+    "description": "A package to ",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Kirschbaum\\Loop\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Luís Dalmolin",
+            "email": "luis.nh@gmail.com"
+        }
+    ],
+    "require": {
+        "spatie/laravel-package-tools": "^1.18",
+        "illuminate/support": "^11.0|^12.0",
+        "illuminate/database": "^11.0|^12.0",
+        "livewire/livewire": "^3.5",
+        "filament/support": "^3.2",
+        "filament/notifications": "^3.2",
+        "filament/filament": "^3.2",
+        "prism-php/prism": "^0.56.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Kirschbaum\\Loop\\LoopServiceProvider"
+            ]
+        }
+    },
+    "require-dev": {
+        "pestphp/pest": "^3.7",
+        "illuminate/auth": "^11.0|^12.0",
+        "orchestra/testbench": "^9.9|^10.0",
+        "pestphp/pest-plugin-laravel": "^3.1",
+        "pestphp/pest-plugin-livewire": "^3.0",
+        "laravel/pint": "^1.21"
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "scripts": {
+        "fix-style": "./vendor/bin/pint --config pint.json",
+        "check-style": "./vendor/bin/pint --config pint.json --test"
+    }
+}
