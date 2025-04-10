@@ -1,0 +1,12 @@
+{
+    "name": "laravel-loop-mcp-server",
+    "version": "1.0.0",
+    "description": "MCP server for Laravel Loop",
+    "main": "server.mjs",
+    "scripts": {
+        "start": "node server.mjs"
+    },
+    "dependencies": {
+        "@modelcontextprotocol/sdk": "^1.9.0"
+    }
+}

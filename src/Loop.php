@@ -34,7 +34,7 @@ use Stripe\Exception\ApiErrorException;
 
 class Loop
 {
-    protected array $tools = [];
+    protected Collection $tools;
     protected static string $context = "";
 
     public static function additionalContext(string $context): void
@@ -44,6 +44,7 @@ class Loop
 
     public function setup(): void
     {
+        $this->tools = collect();
         $resources = [
             AllocationResource::class,
             ProjectResource::class,
@@ -59,19 +60,19 @@ class Loop
         foreach ($resources as $resourceClass) {
             $aiResourceData = $this->getAiResourceData($resourceClass);
 
-            static::additionalContext(
-                $this->formatDocblockPropertiesForDescription(
-                    $aiResourceData->model,
-                    $this->getDocblockRelationships($aiResourceData->model)
-                )
-            );
+            // static::additionalContext(
+            //     $this->formatDocblockPropertiesForDescription(
+            //         $aiResourceData->model,
+            //         $this->getDocblockRelationships($aiResourceData->model)
+            //     )
+            // );
 
-            $this->tools[] = $this->createListTool($aiResourceData->model, $aiResourceData->label, $aiResourceData->pluralLabel);
-            $this->tools[] = $this->createFetchTool($aiResourceData->model, $aiResourceData->label);
-            $this->tools[] = $this->createCreateTool($aiResourceData->model, $aiResourceData->label);
-            $this->tools[] = $this->createUpdateTool($aiResourceData->model, $aiResourceData->label);
-            $this->tools[] = $this->createDeleteTool($aiResourceData->model, $aiResourceData->label);
-            $this->tools[] = $this->createDescribeModelTool($aiResourceData->model, $aiResourceData->label);
+            // $this->tools->push($this->createDescribeModelTool($aiResourceData->model, $aiResourceData->label));
+            $this->tools->push($this->createListTool($aiResourceData->model, $aiResourceData->label, $aiResourceData->pluralLabel));
+            $this->tools->push($this->createFetchTool($aiResourceData->model, $aiResourceData->label));
+            // $this->tools[] = $this->createCreateTool($aiResourceData->model, $aiResourceData->label);
+            // $this->tools[] = $this->createUpdateTool($aiResourceData->model, $aiResourceData->label);
+            // $this->tools[] = $this->createDeleteTool($aiResourceData->model, $aiResourceData->label);
         }
 
         $this->setupStripeTool();
@@ -79,179 +80,181 @@ class Loop
 
     protected function setupStripeTool(): void
     {
-        $this->tools[] = Tool::as('stripe')
-            ->for("make a call to the stripe api. You can use this tool to fetch any stripe related data.")
-            ->withStringParameter('method', "HTTP method to use (GET, POST, PUT, DELETE, etc.)", required: true)
-            ->withStringParameter('path', "Path to call (e.g. /v1/customers)", required: true)
-            // ->withObjectParameter(
-            //     name: 'query',
-            //     description: "Query parameters to include in the request as a JSON object",
-            //     properties: [], // No specific properties needed here, allows any structure
-            //     requiredFields: [],
-            //     allowAdditionalProperties: true,
-            //     required: false // Make query optional
-            // )
-            ->withStringParameter('body', "HTTP body to use if it is not GET (can be JSON string or other format)", required: false)
-            ->withStringParameter('contentType', "HTTP content type to use (default: application/json)", required: false)
-            ->using(function (string $method, string $path, ?object $query = null, ?string $body = null, ?string $contentType = null): string {
-                dump([
-                    'method' => $method,
-                    'path' => $path,
-                    'query' => $query,
-                    'body' => $body,
-                    'contentType' => $contentType
-                ]);
-                try {
-                    // Convert query object to array if provided
-                    $queryData = $query ? json_decode(json_encode($query), true) : [];
-                    if (json_last_error() !== JSON_ERROR_NONE) {
-                        // Handle potential JSON decode error for query if needed
-                        // For now, we'll default to an empty array
-                        $queryData = [];
-                    }
-
-                    // Use the provided method directly
-                    $method = strtoupper($method);
-                    $bodyData = null;
-
-                    // Parse body if provided and method is not GET
-                    if ($body !== null && !empty($body) && $method !== 'GET') {
-                        // Determine content type, default to application/json
-                        $effectiveContentType = $contentType ?: 'application/json';
-
-                        // If content type is JSON, try to parse it
-                        if (stripos($effectiveContentType, 'application/json') !== false) {
-                            if (is_string($body) && str_starts_with(trim($body), '{')) {
-                                $bodyData = json_decode($body, true);
-                                // If JSON decoding fails, pass the raw string body
-                                if (json_last_error() !== JSON_ERROR_NONE) {
-                                     $bodyData = $body;
-                                }
-                            } else {
-                                 $bodyData = $body; // Pass as-is if not a JSON-like string
-                            }
-                        } else {
-                            // For other content types, pass the body as is
-                            $bodyData = $body;
+        $this->tools->push(
+            Tool::as('stripe')
+                ->for("make a call to the stripe api. You can use this tool to fetch any stripe related data.")
+                ->withStringParameter('method', "HTTP method to use (GET, POST, PUT, DELETE, etc.)", required: true)
+                ->withStringParameter('path', "Path to call (e.g. /v1/customers)", required: true)
+                // ->withObjectParameter(
+                //     name: 'query',
+                //     description: "Query parameters to include in the request as a JSON object",
+                //     properties: [], // No specific properties needed here, allows any structure
+                //     requiredFields: [],
+                //     allowAdditionalProperties: true,
+                //     required: false // Make query optional
+                // )
+                ->withStringParameter('body', "HTTP body to use if it is not GET (can be JSON string or other format)", required: false)
+                ->withStringParameter('contentType', "HTTP content type to use (default: application/json)", required: false)
+                ->using(function (string $method, string $path, ?object $query = null, ?string $body = null, ?string $contentType = null): string {
+                    dump([
+                        'method' => $method,
+                        'path' => $path,
+                        'query' => $query,
+                        'body' => $body,
+                        'contentType' => $contentType
+                    ]);
+                    try {
+                        // Convert query object to array if provided
+                        $queryData = $query ? json_decode(json_encode($query), true) : [];
+                        if (json_last_error() !== JSON_ERROR_NONE) {
+                            // Handle potential JSON decode error for query if needed
+                            // For now, we'll default to an empty array
+                            $queryData = [];
                         }
-                    }
 
-                    // Initialize Stripe client with API key
-                    $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
+                        // Use the provided method directly
+                        $method = strtoupper($method);
+                        $bodyData = null;
 
-                    // Extract resource name and ID from path
-                    $path = ltrim($path, '/');
+                        // Parse body if provided and method is not GET
+                        if ($body !== null && !empty($body) && $method !== 'GET') {
+                            // Determine content type, default to application/json
+                            $effectiveContentType = $contentType ?: 'application/json';
 
-                    // If the path starts with v1/, remove it as Stripe SDK handles API versions
-                    if (str_starts_with($path, 'v1/')) {
-                        $path = substr($path, 3);
-                    }
-
-                    $pathParts = explode('/', $path);
-                    $resourceName = $pathParts[0] ?? null;
-
-                    // No resource name found, can't proceed
-                    if (!$resourceName) {
-                        return "Error: Invalid Stripe API path";
-                    }
-
-                    // Handle the request based on the method and path structure
-                    switch ($method) {
-                        case 'GET':
-                            if (count($pathParts) === 1) {
-                                // List resource (e.g., /customers)
-                                $response = $stripe->{$resourceName}->all($queryData);
-                            } else {
-                                // Get specific resource (e.g., /customers/{id})
-                                $id = $pathParts[1] ?? null;
-                                if (!$id) {
-                                    return "Error: Resource ID required for GET request";
+                            // If content type is JSON, try to parse it
+                            if (stripos($effectiveContentType, 'application/json') !== false) {
+                                if (is_string($body) && str_starts_with(trim($body), '{')) {
+                                    $bodyData = json_decode($body, true);
+                                    // If JSON decoding fails, pass the raw string body
+                                    if (json_last_error() !== JSON_ERROR_NONE) {
+                                        $bodyData = $body;
+                                    }
+                                } else {
+                                    $bodyData = $body; // Pass as-is if not a JSON-like string
                                 }
+                            } else {
+                                // For other content types, pass the body as is
+                                $bodyData = $body;
+                            }
+                        }
 
-                                // Check if this is a nested resource
-                                if (count($pathParts) > 2) {
-                                    $nestedResource = $pathParts[2] ?? null;
-                                    if ($nestedResource) {
-                                        // e.g., /customers/{id}/sources
-                                        $resource = $stripe->{$resourceName}->retrieve($id);
-                                        if (method_exists($resource, $nestedResource)) {
-                                            $response = $resource->{$nestedResource}->all($queryData);
+                        // Initialize Stripe client with API key
+                        $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
+
+                        // Extract resource name and ID from path
+                        $path = ltrim($path, '/');
+
+                        // If the path starts with v1/, remove it as Stripe SDK handles API versions
+                        if (str_starts_with($path, 'v1/')) {
+                            $path = substr($path, 3);
+                        }
+
+                        $pathParts = explode('/', $path);
+                        $resourceName = $pathParts[0] ?? null;
+
+                        // No resource name found, can't proceed
+                        if (!$resourceName) {
+                            return "Error: Invalid Stripe API path";
+                        }
+
+                        // Handle the request based on the method and path structure
+                        switch ($method) {
+                            case 'GET':
+                                if (count($pathParts) === 1) {
+                                    // List resource (e.g., /customers)
+                                    $response = $stripe->{$resourceName}->all($queryData);
+                                } else {
+                                    // Get specific resource (e.g., /customers/{id})
+                                    $id = $pathParts[1] ?? null;
+                                    if (!$id) {
+                                        return "Error: Resource ID required for GET request";
+                                    }
+
+                                    // Check if this is a nested resource
+                                    if (count($pathParts) > 2) {
+                                        $nestedResource = $pathParts[2] ?? null;
+                                        if ($nestedResource) {
+                                            // e.g., /customers/{id}/sources
+                                            $resource = $stripe->{$resourceName}->retrieve($id);
+                                            if (method_exists($resource, $nestedResource)) {
+                                                $response = $resource->{$nestedResource}->all($queryData);
+                                            } else {
+                                                return "Error: Nested resource '$nestedResource' not found for resource '$resourceName'";
+                                            }
                                         } else {
-                                            return "Error: Nested resource '$nestedResource' not found for resource '$resourceName'";
+                                            $response = $stripe->{$resourceName}->retrieve($id, $queryData);
                                         }
                                     } else {
                                         $response = $stripe->{$resourceName}->retrieve($id, $queryData);
                                     }
+                                }
+                                break;
+
+                            case 'POST':
+                                if (count($pathParts) === 1) {
+                                    // Create resource
+                                    $response = $stripe->{$resourceName}->create($bodyData ?? []);
                                 } else {
-                                    $response = $stripe->{$resourceName}->retrieve($id, $queryData);
-                                }
-                            }
-                            break;
+                                    // Update specific resource or call a resource method
+                                    $id = $pathParts[1] ?? null;
+                                    if (!$id) {
+                                        return "Error: Resource ID required for POST request";
+                                    }
 
-                        case 'POST':
-                            if (count($pathParts) === 1) {
-                                // Create resource
-                                $response = $stripe->{$resourceName}->create($bodyData ?? []);
-                            } else {
-                                // Update specific resource or call a resource method
-                                $id = $pathParts[1] ?? null;
-                                if (!$id) {
-                                    return "Error: Resource ID required for POST request";
-                                }
-
-                                // Check if this is a nested resource or action
-                                if (count($pathParts) > 2) {
-                                    $action = $pathParts[2] ?? null;
-                                    if ($action) {
-                                        // Try to call the action method on the resource's API
-                                        if (method_exists($stripe->{$resourceName}, $action)) {
-                                            $response = $stripe->{$resourceName}->{$action}($id, $bodyData ?? []);
-                                        } else {
-                                            // Retrieve the resource and try to call the action on the object
-                                            $resource = $stripe->{$resourceName}->retrieve($id);
-                                            if (method_exists($resource, $action)) {
-                                                $response = $resource->{$action}($bodyData ?? []);
+                                    // Check if this is a nested resource or action
+                                    if (count($pathParts) > 2) {
+                                        $action = $pathParts[2] ?? null;
+                                        if ($action) {
+                                            // Try to call the action method on the resource's API
+                                            if (method_exists($stripe->{$resourceName}, $action)) {
+                                                $response = $stripe->{$resourceName}->{$action}($id, $bodyData ?? []);
                                             } else {
-                                                return "Error: Action '$action' not found for resource '$resourceName'";
+                                                // Retrieve the resource and try to call the action on the object
+                                                $resource = $stripe->{$resourceName}->retrieve($id);
+                                                if (method_exists($resource, $action)) {
+                                                    $response = $resource->{$action}($bodyData ?? []);
+                                                } else {
+                                                    return "Error: Action '$action' not found for resource '$resourceName'";
+                                                }
                                             }
+                                        } else {
+                                            $response = $stripe->{$resourceName}->update($id, $bodyData ?? []);
                                         }
                                     } else {
                                         $response = $stripe->{$resourceName}->update($id, $bodyData ?? []);
                                     }
-                                } else {
-                                    $response = $stripe->{$resourceName}->update($id, $bodyData ?? []);
                                 }
-                            }
-                            break;
+                                break;
 
-                        case 'DELETE':
-                            if (count($pathParts) < 2) {
-                                return "Error: Resource ID required for DELETE request";
-                            }
+                            case 'DELETE':
+                                if (count($pathParts) < 2) {
+                                    return "Error: Resource ID required for DELETE request";
+                                }
 
-                            $id = $pathParts[1] ?? null;
-                            if (!$id) {
-                                return "Error: Resource ID required for DELETE request";
-                            }
+                                $id = $pathParts[1] ?? null;
+                                if (!$id) {
+                                    return "Error: Resource ID required for DELETE request";
+                                }
 
-                            $response = $stripe->{$resourceName}->delete($id, $queryData);
-                            break;
+                                $response = $stripe->{$resourceName}->delete($id, $queryData);
+                                break;
 
-                        default:
-                            return "Error: Unsupported HTTP method: $method";
+                            default:
+                                return "Error: Unsupported HTTP method: $method";
+                        }
+
+                        // Convert response to JSON string
+                        return json_encode($response->toArray());
+                    } catch (\Exception $e) {
+                        // Include more details in the error message if possible
+                        $errorDetails = $e->getMessage();
+                        if ($e instanceof ApiErrorException && method_exists($e, 'getJsonBody') && $e->getJsonBody()) {
+                            $errorDetails = json_encode($e->getJsonBody());
+                        }
+                        return "Error making Stripe API call to '$method $path': " . $errorDetails;
                     }
-
-                    // Convert response to JSON string
-                    return json_encode($response->toArray());
-                } catch (\Exception $e) {
-                    // Include more details in the error message if possible
-                    $errorDetails = $e->getMessage();
-                    if ($e instanceof ApiErrorException && method_exists($e, 'getJsonBody') && $e->getJsonBody()) {
-                        $errorDetails = json_encode($e->getJsonBody());
-                    }
-                    return "Error making Stripe API call to '$method $path': " . $errorDetails;
-                }
-            });
+                })
+        );
     }
 
     public function ask(string $question, Collection $messages): Response
@@ -294,7 +297,7 @@ class Loop
             ->withMaxSteps(10)
             ->withMessages($messages)
             ->withSystemPrompt($prompt)
-            ->withTools($this->tools)
+            ->withTools($this->tools->toArray())
             ->asText();
     }
 
@@ -331,7 +334,7 @@ class Loop
         }
 
         return Tool::as($toolName)
-            ->for("List all {$pluralLabel} or perform aggregations (sum, count, avg, min, max) on {$pluralLabel} data. You can filter the results by using the filters parameter.")
+            ->for("List all {$pluralLabel} or perform aggregations (sum, count, avg, min, max) on {$pluralLabel} data. You can filter results by using the fields in the filters parameter.")
             ->withObjectParameter(
                 'data',
                 "Object containing parameters for listing {$pluralLabel}",
@@ -898,21 +901,15 @@ class Loop
         return $description;
     }
 
-    /**
-     * Create a tool for describing the model's fields and relationships
-     *
-     * @param string $modelClass
-     * @param string $label
-     * @return object
-     */
     protected function createDescribeModelTool(string $modelClass, string $label): object
     {
         $modelName = class_basename($modelClass);
         $toolName = strtolower($modelName) . '_describe';
 
         return Tool::as($toolName)
-            ->for("Get detailed information about the {$label} model structure, including all fields and relationships.")
+            ->for("Get detailed information about {$label} table and model structure, including all fields and relationships.")
             ->using(function () use ($modelClass, $label): string {
+                dump('describe tool called', $modelClass, $label);
                 try {
                     // Get table columns
                     $tableColumns = $this->getTableColumns($modelClass);
@@ -964,10 +961,21 @@ class Loop
                         }
                     }
 
+                    dump('describe tool response', $response);
                     return $response;
                 } catch (\Exception $e) {
                     return "Error retrieving model information: " . $e->getMessage();
                 }
             });
+    }
+
+    public function getTools(): Collection
+    {
+        return collect($this->tools);
+    }
+
+    public function getTool(string $name): object
+    {
+        return $this->tools->first(fn ($tool) => $tool->name() === $name);
     }
 }
