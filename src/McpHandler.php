@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Kirschbaum\Loop\Enums\MessageType;
 use Kirschbaum\Loop\Exceptions\LoopMcpException;
+use Prism\Prism\Exceptions\PrismException;
 
 class McpHandler
 {
@@ -150,14 +151,17 @@ class McpHandler
         return [
             'tools' => $this->loop->getTools()->map(function (Tool $tool) {
                 $tool = $tool instanceof Tool ? $tool : $tool->getTool();
+                $parameters = $tool->parameters();
+                $hasParameters = count($parameters) > 0;
 
                 return [
                     'name' => $tool->name(),
                     'description' => $tool->description(),
-                    'inputSchema' => $tool->parameters()['data'] ?? [
-                        "type" => "object",
-                        "properties" => new \stdClass,
-                        "additionalProperties" => false,
+                    'inputSchema' => [
+                        'type' => 'object',
+                        'properties' => $hasParameters ? $tool->parameters() : new \stdClass,
+                        'required' => $hasParameters ? $tool->requiredParameters() : [],
+                        'additionalProperties' => false,
                     ],
                 ];
             })->toArray(),
@@ -184,15 +188,31 @@ class McpHandler
     public function callTool(string $name, array $arguments, Request $request): array
     {
         $tool = $this->loop->getTool($name);
+        info('Calling tool', ['name' => $name, 'arguments' => $arguments, 'tool' => $tool->name()]);
 
         try {
             return [
                 'content' => [
                     [
                         'type' => 'text',
-                        'text' => $tool->handle($arguments),
+                        'text' => $tool->handle(...$arguments),
                     ],
                 ],
+            ];
+        } catch (PrismException $e) {
+            Log::error("Error calling tool {$name}: {$e->getMessage()}", [
+                'arguments' => $arguments,
+                'exception' => $e->getPrevious()?->getMessage(),
+            ]);
+
+            return [
+                'content' => [
+                    [
+                        'type' => 'text',
+                        'text' => $e->getMessage(),
+                    ],
+                ],
+                'isError' => true,
             ];
         } catch (\Exception $e) {
             Log::error("Error calling tool {$name}: {$e->getMessage()}", [
@@ -212,109 +232,11 @@ class McpHandler
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function listPrompts(Request $request): array
-    {
-        $prompts = [];
-
-        foreach ($this->prompts as $name => $prompt) {
-            $promptData = [
-                'name' => $name,
-            ];
-
-            if ($prompt['description'] !== null) {
-                $promptData['description'] = $prompt['description'];
-            }
-
-            if (!empty($prompt['argsSchema'])) {
-                $promptData['arguments'] = $this->promptArgumentsFromSchema($prompt['argsSchema']);
-            }
-
-            $prompts[] = $promptData;
-        }
-
-        return [
-            'prompts' => $prompts,
-        ];
-    }
-
-    /**
-     * Convert argument schema to MCP prompt arguments
-     *
-     * @param array $schema The argument schema
-     * @return array
-     */
-    protected function promptArgumentsFromSchema(array $schema): array
-    {
-        $arguments = [];
-
-        foreach ($schema as $name => $properties) {
-            $argument = [
-                'name' => $name,
-            ];
-
-            if (isset($properties['description'])) {
-                $argument['description'] = $properties['description'];
-            }
-
-            if (isset($properties['required']) && $properties['required']) {
-                $argument['required'] = true;
-            }
-
-            $arguments[] = $argument;
-        }
-
-        return $arguments;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getPrompt(string $name, array $arguments, Request $request): array
-    {
-        if (!isset($this->prompts[$name])) {
-            throw new LoopMcpException("Prompt {$name} not found");
-        }
-
-        $prompt = $this->prompts[$name];
-
-        // Validate arguments against schema if provided
-        if (!empty($prompt['argsSchema'])) {
-            // Simple validation - in a real implementation, you would use a validation library
-            foreach ($prompt['argsSchema'] as $argName => $properties) {
-                if (isset($properties['required']) && $properties['required'] && !isset($arguments[$argName])) {
-                    throw new LoopMcpException("Missing required argument: {$argName}");
-                }
-            }
-        }
-
-        try {
-            return call_user_func($prompt['callback'], $arguments, $request);
-        } catch (\Exception $e) {
-            if ($this->isLoggingEnabled()) {
-                Log::channel($this->getLogChannel())->error(
-                    "Error getting prompt {$name}: {$e->getMessage()}",
-                    ['exception' => $e, 'arguments' => $arguments]
-                );
-            }
-
-            throw new LoopMcpException("Error getting prompt: {$e->getMessage()}");
-        }
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function ping(Request $request): array
     {
         return [];
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function processMessage(MessageType $messageType, string $method, array $params, $id, Request $request): ?array
     {
         try {

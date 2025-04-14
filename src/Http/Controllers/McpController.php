@@ -62,7 +62,7 @@ class McpController extends Controller
 
     protected function successResponse($id, $message)
     {
-        // return response()->json($message);
+        info('MCP response', ['id' => $id, 'message' => $message]);
 
         return response()->json([
             'jsonrpc' => '2.0',

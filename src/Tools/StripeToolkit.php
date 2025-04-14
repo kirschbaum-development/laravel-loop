@@ -12,6 +12,7 @@ use Prism\Prism\Facades\Tool as PrismTool;
 
 class StripeToolkit implements Toolkit
 {
+    protected string $name = "stripe_tool";
     public string $description = "make a call to the stripe api. You can use this tool to fetch any stripe related data.";
 
     public function __construct(
@@ -35,15 +36,21 @@ class StripeToolkit implements Toolkit
 
     public function getTool(string $name): ?\Prism\Prism\Tool
     {
+        if ($name !== $this->name) {
+            return null;
+        }
+
         return $this->getApiTool();
     }
 
     public function getApiTool(): \Prism\Prism\Tool
     {
-        return PrismTool::as('stripe')
+        return PrismTool::as($this->name)
             ->for($this->description)
             ->withStringParameter('method', "HTTP method to use (GET, POST, PUT, DELETE, etc.)", required: true)
             ->withStringParameter('path', "Path to call (e.g. /v1/customers)", required: true)
+            ->withStringParameter('body', "HTTP body to use if it is not GET (can be JSON string or other format)", required: false)
+            ->withStringParameter('contentType', "HTTP content type to use (default: application/json)", required: false)
             // ->withObjectParameter(
             //     name: 'query',
             //     description: "Query parameters to include in the request as a JSON object",
@@ -52,9 +59,8 @@ class StripeToolkit implements Toolkit
             //     allowAdditionalProperties: true,
             //     required: false // Make query optional
             // )
-            ->withStringParameter('body', "HTTP body to use if it is not GET (can be JSON string or other format)", required: false)
-            ->withStringParameter('contentType', "HTTP content type to use (default: application/json)", required: false)
-            ->using(function (string $method, string $path, ?object $query = null, ?string $body = null, ?string $contentType = null): string {
+            ->using(function ($method, $path, $body = null, $contentType = null): string {
+                info('StripeToolkit', ['method' => $method, 'path' => $path, 'body' => $body, 'contentType' => $contentType]);
                 if (! class_exists(StripeClient::class)) {
                     return "Error: Stripe SDK not installed. Please install it using 'composer require stripe/stripe-php'.";
                 }
@@ -70,7 +76,8 @@ class StripeToolkit implements Toolkit
 
                 // TODO: Refactor this code
                 try {
-                    $queryData = $query ? json_decode(json_encode($query), true) : [];
+                    // $queryData = $query ? json_decode(json_encode($query), true) : [];
+                    $queryData = [];
 
                     if (json_last_error() !== JSON_ERROR_NONE) {
                         $queryData = [];

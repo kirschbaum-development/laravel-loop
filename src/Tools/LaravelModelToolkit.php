@@ -46,21 +46,20 @@ class LaravelModelToolkit implements Toolkit
         $aiResourceData = $this->getAiResourceData($model);
 
         return collect([
-            $this->createDescribeModelTool($aiResourceData->model, $aiResourceData->label),
+            $this->createDescribeModelTool($aiResourceData->model, $aiResourceData->label, $aiResourceData->pluralLabel),
             $this->createListTool($aiResourceData->model, $aiResourceData->label, $aiResourceData->pluralLabel),
             $this->createFetchTool($aiResourceData->model, $aiResourceData->label),
         ]);
     }
 
-    protected function createDescribeModelTool(string $modelClass, string $label): object
+    protected function createDescribeModelTool(string $modelClass, string $label, string $pluralLabel): object
     {
         $modelName = class_basename($modelClass);
         $toolName = strtolower($modelName) . '_describe';
 
         return PrismTool::as($toolName)
-            ->for("Get detailed information about {$label} table and model structure, including all fields and relationships.")
+            ->for("Get detailed information about the {$pluralLabel} table and resource structure, including all its fields and relationships.")
             ->using(function () use ($modelClass, $label): string {
-                dump('describe tool called', $modelClass, $label);
                 try {
                     // Get table columns
                     $tableColumns = $this->getTableColumns($modelClass);
@@ -646,8 +645,8 @@ class LaravelModelToolkit implements Toolkit
         if (is_subclass_of($modelClass, Model::class)) {
             return new ResourceData(
                 model: $modelClass,
-                label: Pluralizer::singular($modelClass),
-                pluralLabel: Pluralizer::plural($modelClass),
+                label: Pluralizer::singular(class_basename($modelClass)),
+                pluralLabel: Pluralizer::plural(class_basename($modelClass)),
             );
         }
 

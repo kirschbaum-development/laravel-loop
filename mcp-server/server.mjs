@@ -13,9 +13,7 @@ const key = process.argv[3]
 class ProxyTransport {
   #stdio = new StdioServerTransport()
   async start() {
-    console.log("Starting proxy transport")
     this.#stdio.onmessage = (message) => {
-      console.log("Received message", message)
       if ("id" in message) {
         fetch(url + "/mcp", {
           method: "POST",
@@ -24,15 +22,17 @@ class ProxyTransport {
             authorization: `Bearer ${key}`,
           },
           body: JSON.stringify(message),
-        }).then(async (response) => this.send(await response.json()))
-        return
+        }).then(async (response) => {
+            const data = await response.json();
+            this.send(data)
+        })
       }
       this.#stdio.send(message)
     }
     this.#stdio.onerror = (error) => {
-      console.error("Error", error)
-    //   this.onerror?.(error)
+      if (this.onerror) this.onerror(error)
     }
+
     await this.#stdio.start()
   }
   async send(message) {
@@ -45,4 +45,5 @@ class ProxyTransport {
   onerror
   onmessage
 }
+
 await server.connect(new ProxyTransport())
