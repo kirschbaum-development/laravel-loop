@@ -18,29 +18,34 @@ php artisan vendor:publish --provider="Kirschbaum\Loop\LoopServiceProvider" --ta
 
 ## Usage
 
-### Loop AI Assistant
-
-You can use the Loop AI assistant in your application code:
+First, you must register your tools:
 
 ```php
 use Kirschbaum\Loop\Loop;
+use Kirschbaum\Loop\Mode;
 
-public function __construct(Loop $loop)
-{
-    $this->loop = $loop;
-}
+Loop::toolkit(StripeToolkit::make());
+Loop::toolkit(LaravelModelToolkit::make(
+    models: [
+        \App\Models\User::class,
+        \App\Models\Subscription::class,
+    ]
+));
 
-public function askAi(string $question)
-{
-    $messages = collect([
-        ['user' => 'User', 'message' => 'What is Laravel?'],
-        ['user' => 'AI', 'message' => 'Laravel is a PHP web framework...'],
-    ]);
-    
-    $response = $this->loop->ask($question, $messages);
-    
-    return (string) $response;
-}
+// Register your custom tool
+Loop::registerTool(
+    tool: CustomTool::make(
+        name: 'custom_tool',
+        description: 'This is a custom tool',
+        parameters: [
+            'name' => ['type' => 'string', 'description' => 'The name of the user', 'required' => true],
+            'age' => ['type' => 'integer', 'description' => 'The age of the user'],
+        ],
+        execute: function (string $name, ?int $age = null) {
+            return sprintf('Hello, %s! You are %d years old.', $name, $age ?? 'unknown');
+        },
+    ),
+);
 ```
 
 ### Custom Tools
@@ -76,7 +81,7 @@ This package also provides an MCP Server with your tools which you can make it a
 To run the MCP server, you can use the following command:
 
 ```bash
-npx opencontrol https://your-url.com api-key
+claude mcp add laravel-loop-mcp npx opencontrol https://your-url.com api-key
 ```
 
 To generate an API key, you must create a new Laravel Sanctum API token.
