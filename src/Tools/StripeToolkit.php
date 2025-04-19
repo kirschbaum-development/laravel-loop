@@ -51,16 +51,8 @@ class StripeToolkit implements Toolkit
             ->withStringParameter('path', "Path to call (e.g. /v1/customers)", required: true)
             ->withStringParameter('body', "HTTP body to use if it is not GET (can be JSON string or other format)", required: false)
             ->withStringParameter('contentType', "HTTP content type to use (default: application/json)", required: false)
-            // ->withObjectParameter(
-            //     name: 'query',
-            //     description: "Query parameters to include in the request as a JSON object",
-            //     properties: [], // No specific properties needed here, allows any structure
-            //     requiredFields: [],
-            //     allowAdditionalProperties: true,
-            //     required: false // Make query optional
-            // )
-            ->using(function ($method, $path, $body = null, $contentType = null): string {
-                info('StripeToolkit', ['method' => $method, 'path' => $path, 'body' => $body, 'contentType' => $contentType]);
+            ->withStringParameter(name: 'query', description: "Query parameters to include in the request as a JSON object", required: false)
+            ->using(function ($method, $path, $body = null, $contentType = null, $query = null): string {
                 if (! class_exists(StripeClient::class)) {
                     return "Error: Stripe SDK not installed. Please install it using 'composer require stripe/stripe-php'.";
                 }

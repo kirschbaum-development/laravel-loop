@@ -2,6 +2,7 @@
 
 namespace Kirschbaum\Loop\Tools;
 
+use ReflectionClass;
 use Filament\Resources\Resource;
 use Kirschbaum\Loop\ResourceData;
 use Illuminate\Support\Collection;
@@ -58,63 +59,49 @@ class LaravelModelToolkit implements Toolkit
         $toolName = strtolower($modelName) . '_describe';
 
         return PrismTool::as($toolName)
-            ->for("Get detailed information about the {$pluralLabel} table and resource structure, including all its fields and relationships.")
+            ->for("Get detailed information about the {$pluralLabel} table, with all its fields and relationships.")
             ->using(function () use ($modelClass, $label): string {
                 try {
-                    // Get table columns
                     $tableColumns = $this->getTableColumns($modelClass);
-
-                    // Get relationships
                     $relationships = $this->getDocblockRelationships($modelClass);
 
-                    // Initialize model instance
                     $model = new $modelClass();
                     $tableName = $model->getTable();
                     $primaryKey = $model->getKeyName();
                     $fillable = $model->getFillable();
 
-                    // Start building the response
-                    $response = "# {$label} Model Information\n\n";
-
-                    // Basic model information
-                    $response .= "## Basic Information\n";
-                    $response .= "- **Model Class**: `{$modelClass}`\n";
-                    $response .= "- **Table Name**: `{$tableName}`\n";
-                    $response .= "- **Primary Key**: `{$primaryKey}`\n\n";
-
-                    // Fields/columns information
-                    $response .= "## Database Fields\n\n";
-                    $response .= "| Field | Type | Nullable | Has Default | Default Value | Fillable |\n";
-                    $response .= "|-------|------|----------|-------------|--------------|---------|\n";
+                    // Prepare data for JSON response
+                    $data = [
+                        'label' => $label,
+                        'basic_information' => [
+                            'model_class' => $modelClass,
+                            'table_name' => $tableName,
+                            'primary_key' => $primaryKey,
+                        ],
+                        'database_fields' => [],
+                        'relationships' => [],
+                    ];
 
                     foreach ($tableColumns as $column) {
-                        $isFillable = in_array($column->name, $fillable) ? '✓' : '✗';
-                        $isNullable = $column->nullable ? '✓' : '✗';
-                        $hasDefault = $column->has_default ? '✓' : '✗';
-                        $defaultValue = $column->default === null ? 'NULL' : $column->default;
-
-                        $response .= "| `{$column->name}` | {$column->type} | {$isNullable} | {$hasDefault} | {$defaultValue} | {$isFillable} |\n";
+                        $data['database_fields'][] = [
+                            'field' => $column->name,
+                            'type' => $column->type,
+                            'nullable' => $column->nullable,
+                            'has_default' => $column->has_default,
+                            'default_value' => $column->default,
+                            'fillable' => in_array($column->name, $fillable),
+                        ];
                     }
 
-                    // Relationships information
                     if (!empty($relationships)) {
-                        $response .= "\n## Relationships\n\n";
-                        $response .= "| Relation Type | Related Model | Foreign Key |\n";
-                        $response .= "|--------------|--------------|------------|\n";
-
                         foreach ($relationships as $relationship) {
-                            $relationType = $relationship['relation'];
-                            $relatedModel = $relationship['related_model'];
-                            $foreignKey = $relationship['foreign_key'] ?? 'N/A';
-
-                            $response .= "| {$relationType} | {$relatedModel} | {$foreignKey} |\n";
+                             $data['relationships'][] = $relationship;
                         }
                     }
 
-                    dump('describe tool response', $response);
-                    return $response;
+                    return json_encode($data, JSON_PRETTY_PRINT);
                 } catch (\Exception $e) {
-                    return "Error retrieving model information: " . $e->getMessage();
+                    return json_encode(['error' => "Error retrieving model information: " . $e->getMessage()]);
                 }
             });
     }
@@ -124,35 +111,36 @@ class LaravelModelToolkit implements Toolkit
         $modelName = class_basename($modelClass);
         $toolName = strtolower($modelName) . '_list';
 
-        $modelInstance = new $modelClass();
-        $fillableAttributes = $modelInstance->getFillable();
-        $tableColumns = $this->getTableColumns($modelClass);
-        $filterProperties = [];
+        // $modelInstance = new $modelClass();
+        // $fillableAttributes = $modelInstance->getFillable();
+        // $tableColumns = $this->getTableColumns($modelClass);
+        // $filterProperties = [];
 
-        foreach ($tableColumns as $attribute => $column) {
-            $type = $this->mapDatabaseTypeToParameterType($column->type);
+        // foreach ($tableColumns as $attribute => $column) {
+        //     $type = $this->mapDatabaseTypeToParameterType($column->type);
 
-            switch ($type) {
-                case 'number':
-                    $filterProperties[] = new ObjectSchema($attribute, "Filter by {$attribute}", [
-                        new NumberSchema('value', "Value to filter {$attribute} by"),
-                        new StringSchema('operator', "Comparison operator: =, >, <, >=, <= (default: =)")
-                    ], ['value']);
-                    break;
-                case 'boolean':
-                    $filterProperties[] = new BooleanSchema($attribute, "Filter by {$attribute}");
-                    break;
-                default:
-                    $filterProperties[] = new ObjectSchema($attribute, "Filter by {$attribute}", [
-                        new StringSchema('value', "Value to filter {$attribute} by"),
-                        new StringSchema('operator', "Comparison operator: =, >, <, >=, <= (default: =)")
-                    ], ['value']);
-                    break;
-            }
-        }
+        //     switch ($type) {
+        //         case 'number':
+        //             $filterProperties[] = new ObjectSchema($attribute, "Filter by {$attribute}", [
+        //                 new NumberSchema('value', "Value to filter {$attribute} by"),
+        //                 new StringSchema('operator', "Comparison operator: =, >, <, >=, <= (default: =)")
+        //             ], ['value']);
+        //             break;
+        //         case 'boolean':
+        //             $filterProperties[] = new BooleanSchema($attribute, "Filter by {$attribute}");
+        //             break;
+        //         default:
+        //             $filterProperties[] = new ObjectSchema($attribute, "Filter by {$attribute}", [
+        //                 new StringSchema('value', "Value to filter {$attribute} by"),
+        //                 new StringSchema('operator', "Comparison operator: =, >, <, >=, <= (default: =)")
+        //             ], ['value']);
+        //             break;
+        //     }
+        // }
 
         return PrismTool::as($toolName)
-            ->for("List all {$pluralLabel} or perform aggregations (sum, count, avg, min, max) on {$pluralLabel} data. You can filter results by using the fields in the filters parameter.")
+            // ->for("List all {$pluralLabel} or perform aggregations (sum, count, avg, min, max) on {$pluralLabel} data. You can filter results by using the fields described in the describe tool.")
+            ->for("List all {$pluralLabel}. You can filter results by using the fields from the describe tool.")
             ->withObjectParameter(
                 'data',
                 "Object containing parameters for listing {$pluralLabel}",
@@ -160,12 +148,12 @@ class LaravelModelToolkit implements Toolkit
                     new NumberSchema('limit', "Maximum number of {$pluralLabel} to return"),
                     new StringSchema('order_by', "Field to order results by"),
                     new StringSchema('order_direction', "Order direction (asc or desc)"),
-                    new ObjectSchema('filters', "Filters to apply when listing {$pluralLabel}", $filterProperties, [], true),
-                    new ObjectSchema('aggregation', "Aggregation to perform on {$pluralLabel}", [
-                        new StringSchema('function', "Aggregation function: sum, count, avg, min, max"),
-                        new StringSchema('field', "Field to aggregate"),
-                        new StringSchema('group_by', "Field to group by (optional)"),
-                    ], [], true),
+                    new StringSchema('filters', "Filters (JSON) to apply when listing {$pluralLabel}"),
+                    // new ObjectSchema('aggregation', "Aggregation to perform on {$pluralLabel}", [
+                    //     new StringSchema('function', "Aggregation function: sum, count, avg, min, max"),
+                    //     new StringSchema('field', "Field to aggregate"),
+                    //     new StringSchema('group_by', "Field to group by (optional)"),
+                    // ], [], true),
                 ],
                 [], // No required fields
                 true, // Allow additional properties
@@ -174,58 +162,52 @@ class LaravelModelToolkit implements Toolkit
             ->using(function ($data) use ($modelClass, $pluralLabel): string {
                 // Convert the object to array if it's not already
                 if (is_object($data)) {
-                    $data = json_decode(json_encode($data), true) ?: [];
+                    $data = json_decode(json_encode($data), true) ?? [];
                 }
 
                 // Extract parameters with defaults
                 $limit = $data['limit'] ?? 10;
-                $order_by = $data['order_by'] ?? null;
+                $orderBy = $data['order_by'] ?? null;
                 $order_direction = $data['order_direction'] ?? 'asc';
-                $filters = $data['filters'] ?? null;
+                $filters = json_decode($data['filters'] ?? null, true) ?? null;
                 $aggregation = $data['aggregation'] ?? null;
-
                 $query = $modelClass::query();
 
-                // Apply filters if provided
                 if ($filters && is_array($filters)) {
                     foreach ($filters as $field => $value) {
-                        if ($value !== null) {
-                            // Handle both simple value and object with value+operator
-                            if (is_array($value) && isset($value['value'])) {
-                                $operator = $value['operator'] ?? '=';
-                                $filterValue = $value['value'];
+                        if ($value === null) {
+                            continue;
+                        }
 
-                                // Validate operator
-                                $validOperators = ['=', '>', '<', '>=', '<='];
-                                if (!in_array($operator, $validOperators)) {
-                                    $operator = '='; // Default to equality if invalid
-                                }
+                        if (is_array($value) && isset($value['value'])) {
+                            $operator = $value['operator'] ?? '=';
+                            $filterValue = $value['value'];
 
-                                $query->where($field, $operator, $filterValue);
-                            } else {
-                                $query->where($field, $value);
+                            $validOperators = ['=', '>', '<', '>=', '<='];
+                            if (! in_array($operator, $validOperators)) {
+                                $operator = '=';
                             }
+
+                            $query->where($field, $operator, $filterValue);
+                        } else {
+                            $query->where($field, $value);
                         }
                     }
                 }
 
-                // Handle aggregation if provided
                 if ($aggregation && is_array($aggregation) && !empty($aggregation['function']) && !empty($aggregation['field'])) {
                     $function = strtolower($aggregation['function']);
                     $field = $aggregation['field'];
                     $group_by = $aggregation['group_by'] ?? null;
 
-                    // Validate the aggregation function
                     $validFunctions = ['sum', 'count', 'avg', 'min', 'max'];
                     if (!in_array($function, $validFunctions)) {
                         return "Invalid aggregation function. Valid options are: " . implode(', ', $validFunctions);
                     }
 
-                    // Apply grouping if specified
                     if ($group_by) {
                         $query->groupBy($group_by);
 
-                        // For count with grouping, we need to use countBy
                         if ($function === 'count') {
                             $results = $query->get()->countBy($group_by);
 
@@ -236,7 +218,6 @@ class LaravelModelToolkit implements Toolkit
                             return $result;
                         }
 
-                        // For other aggregations with grouping
                         $results = $query->select($group_by, DB::raw("{$function}({$field}) as aggregate_value"))->get();
 
                         $result = "Aggregation results for {$function} of {$field} grouped by {$group_by}:\n\n";
@@ -245,15 +226,13 @@ class LaravelModelToolkit implements Toolkit
                         }
                         return $result;
                     } else {
-                        // Simple aggregation without grouping
                         $result = $query->$function(str_contains($field, '(') ? DB::raw($field) : $field);
                         return "Aggregation result: {$function}({$field}) = {$result}";
                     }
                 }
 
-                // Regular listing (no aggregation)
-                if ($order_by) {
-                    $query->orderBy($order_by, $order_direction ?: 'asc');
+                if ($orderBy) {
+                    $query->orderBy($orderBy, $order_direction ?: 'asc');
                 }
 
                 $records = $query->limit($limit ?: 10)->get();
@@ -653,15 +632,9 @@ class LaravelModelToolkit implements Toolkit
         throw new \Exception("Resource class {$modelClass} is not a valid resource or model class");
     }
 
-    /**
-     * Extract properties defined in the model's docblock
-     *
-     * @param string $modelClass
-     * @return array
-     */
     protected function getDocblockRelationships(string $modelClass): array
     {
-        $reflection = new \ReflectionClass($modelClass);
+        $reflection = new ReflectionClass($modelClass);
         $docComment = $reflection->getDocComment();
 
         if (!$docComment) {
@@ -672,50 +645,36 @@ class LaravelModelToolkit implements Toolkit
         $lines = explode("\n", $docComment);
 
         foreach ($lines as $line) {
-            // Match property definitions like "@property AnyType<related> $name description"
-            if (! preg_match('/@property(-read|-write)?\s+([^\s<]+)<([^>]+)>\s+\$([^\s]+)(?:\s+(.*))?/', $line, $matches)) {
+            $pattern = '/@property(?:-read|-write)?\s+([^\s$]+)\s+(\$\w+)\s*(.*)$/m';
+
+            if (! preg_match($pattern, $line, $matches)) {
                 continue;
             }
 
-            $relatedModel = $matches[3];
-            $relationName = $matches[4];
-            $relationObject = (new $modelClass)->$relationName();
-            // dd($modelClass, $relationName, (new $modelClass)->$relationName()->getForeignKeyName(), (new $modelClass)->$relationName()->getLocalKeyName());
+            try {
+                $model = new $modelClass();
+                $relatedModel = $matches[1];
+                $property = ltrim($matches[2], '$');
 
-            $properties[] = [
-                'relation' => $matches[2],
-                'related_model' => $relatedModel,
-                'foreign_key' => method_exists($relationObject, 'getForeignKeyName') ? $relationObject->getForeignKeyName() : null,
-            ];
+                if (! method_exists($model, $property)) {
+                    continue;
+                }
+
+                $returnType = $reflection->getMethod($property)->getReturnType()->getName();
+
+                $relation = $model->$property();
+
+                $properties[] = [
+                    'relation' => $property,
+                    'type' => $returnType,
+                    'related_model' => $relatedModel,
+                    'foreign_key' => method_exists($relation, 'getForeignKeyName') ? $relation->getForeignKeyName() : null,
+                ];
+            } catch (\Exception $e) {
+                continue;
+            }
         }
 
         return $properties;
-    }
-
-    /**
-     * Format docblock properties for inclusion in tool descriptions
-     *
-     * @param array $properties
-     * @return string
-     */
-    protected function formatDocblockPropertiesForDescription(string $modelClass, array $properties): string
-    {
-        if (empty($properties)) {
-            return '';
-        }
-
-        $description = "\n\nThe {$modelClass} resource also includes the following relationships:";
-
-        foreach ($properties as $property) {
-            $description .= sprintf(
-                "\n- %s %s via the %s foreign key",
-                $modelClass,
-                $property['relation'],
-                $property['related_model'],
-                $property['foreign_key']
-            );
-        }
-
-        return $description;
     }
 }

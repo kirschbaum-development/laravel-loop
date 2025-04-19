@@ -78,7 +78,7 @@ Loop::registerTool(
 
 This package also provides an MCP Server with your tools which you can make it available to your MCP clients (Claude Code, Cursor, etc.).
 
-To run the MCP server, you can use the following command:
+To add the MCP server to Claude Code, for example, you can use the following command:
 
 ```bash
 claude mcp add laravel-loop-mcp npx opencontrol https://your-url.com api-key
