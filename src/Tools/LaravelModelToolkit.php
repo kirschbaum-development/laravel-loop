@@ -660,13 +660,13 @@ class LaravelModelToolkit implements Toolkit
                     continue;
                 }
 
-                $returnType = $reflection->getMethod($property)->getReturnType()->getName();
+                $returnType = $reflection->getMethod($property)->getReturnType();
 
                 $relation = $model->$property();
 
                 $properties[] = [
                     'relation' => $property,
-                    'type' => $returnType,
+                    'type' => $returnType?->getName(),
                     'related_model' => $relatedModel,
                     'foreign_key' => method_exists($relation, 'getForeignKeyName') ? $relation->getForeignKeyName() : null,
                 ];
