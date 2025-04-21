@@ -3,12 +3,12 @@
 namespace Kirschbaum\Loop;
 
 use Spatie\LaravelPackageTools\Package;
-use Kirschbaum\Loop\Commands\OpenControlMcpCommand;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Kirschbaum\Loop\Commands\LoopMcpServerStartCommand;
 
 class LoopServiceProvider extends PackageServiceProvider
 {
-    public static string $name = 'loop';
+    public static string $name = 'laravel-loop';
 
     public function configurePackage(Package $package): void
     {
@@ -22,7 +22,7 @@ class LoopServiceProvider extends PackageServiceProvider
             ->hasRoutes(['api'])
             ->hasConfigFile()
             ->hasCommands([
-                OpenControlMcpCommand::class,
+                LoopMcpServerStartCommand::class,
             ])
         ;
     }
