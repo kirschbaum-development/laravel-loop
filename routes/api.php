@@ -5,12 +5,8 @@ use Kirschbaum\Loop\Http\Controllers\LoopController;
 use Kirschbaum\Loop\Http\Controllers\McpController;
 
 Route::prefix('mcp')
-    // ->middleware(['loop.api'])
+    ->middleware(config('loop.middleware', []))
     ->group(function () {
         Route::get('/', McpController::class);
         Route::post('/', McpController::class);
-
-        // Route::post('/messages', [LoopController::class, 'storeMessage']);
-        // Route::get('/messages', [LoopController::class, 'getMessages']);
-        // Route::delete('/messages', [LoopController::class, 'clearMessages']);
     });

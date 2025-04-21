@@ -27,7 +27,9 @@
         "filament/support": "^3.2",
         "filament/notifications": "^3.2",
         "filament/filament": "^3.2",
-        "prism-php/prism": "^0.56.0"
+        "prism-php/prism": "^0.56.0",
+        "react/event-loop": "^1.5",
+        "react/stream": "^1.4"
     },
     "extra": {
         "laravel": {

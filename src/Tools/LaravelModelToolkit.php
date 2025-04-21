@@ -2,7 +2,9 @@
 
 namespace Kirschbaum\Loop\Tools;
 
+use Exception;
 use ReflectionClass;
+use Kirschbaum\Loop\Enums\Mode;
 use Filament\Resources\Resource;
 use Kirschbaum\Loop\ResourceData;
 use Illuminate\Support\Collection;
@@ -19,6 +21,7 @@ class LaravelModelToolkit implements Toolkit
 {
     public function __construct(
         public readonly array $models = [],
+        public readonly Mode $mode = Mode::ReadOnly,
     ) {
     }
 
@@ -70,7 +73,6 @@ class LaravelModelToolkit implements Toolkit
                     $primaryKey = $model->getKeyName();
                     $fillable = $model->getFillable();
 
-                    // Prepare data for JSON response
                     $data = [
                         'label' => $label,
                         'basic_information' => [
@@ -93,14 +95,10 @@ class LaravelModelToolkit implements Toolkit
                         ];
                     }
 
-                    if (!empty($relationships)) {
-                        foreach ($relationships as $relationship) {
-                             $data['relationships'][] = $relationship;
-                        }
-                    }
+                    $data['relationships'] = $relationships;
 
                     return json_encode($data, JSON_PRETTY_PRINT);
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     return json_encode(['error' => "Error retrieving model information: " . $e->getMessage()]);
                 }
             });
@@ -111,35 +109,7 @@ class LaravelModelToolkit implements Toolkit
         $modelName = class_basename($modelClass);
         $toolName = strtolower($modelName) . '_list';
 
-        // $modelInstance = new $modelClass();
-        // $fillableAttributes = $modelInstance->getFillable();
-        // $tableColumns = $this->getTableColumns($modelClass);
-        // $filterProperties = [];
-
-        // foreach ($tableColumns as $attribute => $column) {
-        //     $type = $this->mapDatabaseTypeToParameterType($column->type);
-
-        //     switch ($type) {
-        //         case 'number':
-        //             $filterProperties[] = new ObjectSchema($attribute, "Filter by {$attribute}", [
-        //                 new NumberSchema('value', "Value to filter {$attribute} by"),
-        //                 new StringSchema('operator', "Comparison operator: =, >, <, >=, <= (default: =)")
-        //             ], ['value']);
-        //             break;
-        //         case 'boolean':
-        //             $filterProperties[] = new BooleanSchema($attribute, "Filter by {$attribute}");
-        //             break;
-        //         default:
-        //             $filterProperties[] = new ObjectSchema($attribute, "Filter by {$attribute}", [
-        //                 new StringSchema('value', "Value to filter {$attribute} by"),
-        //                 new StringSchema('operator', "Comparison operator: =, >, <, >=, <= (default: =)")
-        //             ], ['value']);
-        //             break;
-        //     }
-        // }
-
         return PrismTool::as($toolName)
-            // ->for("List all {$pluralLabel} or perform aggregations (sum, count, avg, min, max) on {$pluralLabel} data. You can filter results by using the fields described in the describe tool.")
             ->for("List all {$pluralLabel}. You can filter results by using the fields from the describe tool.")
             ->withObjectParameter(
                 'data',
@@ -149,32 +119,24 @@ class LaravelModelToolkit implements Toolkit
                     new StringSchema('order_by', "Field to order results by"),
                     new StringSchema('order_direction', "Order direction (asc or desc)"),
                     new StringSchema('filters', "Filters (JSON) to apply when listing {$pluralLabel}"),
-                    // new ObjectSchema('aggregation', "Aggregation to perform on {$pluralLabel}", [
-                    //     new StringSchema('function', "Aggregation function: sum, count, avg, min, max"),
-                    //     new StringSchema('field', "Field to aggregate"),
-                    //     new StringSchema('group_by', "Field to group by (optional)"),
-                    // ], [], true),
                 ],
-                [], // No required fields
-                true, // Allow additional properties
-                true // Required parameter
+                requiredFields:[],
+                allowAdditionalProperties: true,
+                required: true
             )
             ->using(function ($data) use ($modelClass, $pluralLabel): string {
-                // Convert the object to array if it's not already
-                if (is_object($data)) {
-                    $data = json_decode(json_encode($data), true) ?? [];
-                }
+                try {
+                    if (is_object($data)) {
+                        $data = json_decode(json_encode($data), true) ?? [];
+                    }
 
-                // Extract parameters with defaults
-                $limit = $data['limit'] ?? 10;
-                $orderBy = $data['order_by'] ?? null;
-                $order_direction = $data['order_direction'] ?? 'asc';
-                $filters = json_decode($data['filters'] ?? null, true) ?? null;
-                $aggregation = $data['aggregation'] ?? null;
-                $query = $modelClass::query();
+                    $limit = $data['limit'] ?? 10;
+                    $orderBy = $data['order_by'] ?? null;
+                    $order_direction = $data['order_direction'] ?? 'asc';
+                    $filters = json_decode($data['filters'] ?? null, true) ?? null;
+                    $query = $modelClass::query();
 
-                if ($filters && is_array($filters)) {
-                    foreach ($filters as $field => $value) {
+                    foreach ((array) $filters as $field => $value) {
                         if ($value === null) {
                             continue;
                         }
@@ -193,61 +155,27 @@ class LaravelModelToolkit implements Toolkit
                             $query->where($field, $value);
                         }
                     }
-                }
 
-                if ($aggregation && is_array($aggregation) && !empty($aggregation['function']) && !empty($aggregation['field'])) {
-                    $function = strtolower($aggregation['function']);
-                    $field = $aggregation['field'];
-                    $group_by = $aggregation['group_by'] ?? null;
-
-                    $validFunctions = ['sum', 'count', 'avg', 'min', 'max'];
-                    if (!in_array($function, $validFunctions)) {
-                        return "Invalid aggregation function. Valid options are: " . implode(', ', $validFunctions);
+                    if ($orderBy) {
+                        $query->orderBy($orderBy, $order_direction ?: 'asc');
                     }
 
-                    if ($group_by) {
-                        $query->groupBy($group_by);
+                    $records = $query->limit($limit ?: 10)->get();
 
-                        if ($function === 'count') {
-                            $results = $query->get()->countBy($group_by);
-
-                            $result = "Aggregation results for count grouped by {$group_by}:\n\n";
-                            foreach ($results as $groupValue => $count) {
-                                $result .= "{$group_by}: {$groupValue}, Count: {$count}\n";
-                            }
-                            return $result;
-                        }
-
-                        $results = $query->select($group_by, DB::raw("{$function}({$field}) as aggregate_value"))->get();
-
-                        $result = "Aggregation results for {$function} of {$field} grouped by {$group_by}:\n\n";
-                        foreach ($results as $row) {
-                            $result .= "{$group_by}: {$row->$group_by}, {$function}({$field}): {$row->aggregate_value}\n";
-                        }
-                        return $result;
-                    } else {
-                        $result = $query->$function(str_contains($field, '(') ? DB::raw($field) : $field);
-                        return "Aggregation result: {$function}({$field}) = {$result}";
+                    if ($records->isEmpty()) {
+                        return "No {$pluralLabel} found.";
                     }
+
+                    $result = "Found " . $records->count() . " {$pluralLabel}:\n\n";
+
+                    foreach ($records as $record) {
+                        $result .= "ID: {$record->id}, " . $this->formatModelAttributes($record) . "\n";
+                    }
+
+                    return $result;
+                } catch (Exception $e) {
+                    return "Error listing {$pluralLabel}: " . $e->getMessage();
                 }
-
-                if ($orderBy) {
-                    $query->orderBy($orderBy, $order_direction ?: 'asc');
-                }
-
-                $records = $query->limit($limit ?: 10)->get();
-
-                if ($records->isEmpty()) {
-                    return "No {$pluralLabel} found.";
-                }
-
-                $result = "Found " . $records->count() . " {$pluralLabel}:\n\n";
-
-                foreach ($records as $record) {
-                    $result .= "ID: {$record->id}, " . $this->formatModelAttributes($record) . "\n";
-                }
-
-                return $result;
             });
     }
 
@@ -257,24 +185,22 @@ class LaravelModelToolkit implements Toolkit
         $toolName = strtolower($modelName) . '_fetch';
 
         return PrismTool::as($toolName)
-            ->for("Fetch a specific {$label} by ID.")
+            ->for("Fetch a specific {$label} by ID or its primary key.")
             ->withObjectParameter(
                 'data',
                 "Object containing parameters to fetch a {$label}",
                 [
                     new NumberSchema('id', "The ID of the {$label} to fetch"),
                 ],
-                ['id'], // Required fields
-                false, // Don't allow additional properties
-                true // Required parameter
+                requiredFields: ['id'],
+                allowAdditionalProperties: false,
+                required: true
             )
             ->using(function ($data) use ($modelClass, $label): string {
-                // Convert the object to array if it's not already
                 if (is_object($data)) {
                     $data = json_decode(json_encode($data), true) ?: [];
                 }
 
-                // Extract id parameter (should always be present due to required fields)
                 $id = $data['id'];
                 $record = $modelClass::find($id);
 
@@ -497,7 +423,7 @@ class LaravelModelToolkit implements Toolkit
         $formatted = [];
 
         foreach ($attributes as $key => $value) {
-            if (in_array($key, ['id', 'created_at', 'updated_at']) && !$detailed) {
+            if (in_array($key, ['id', 'created_at', 'updated_at']) && ! $detailed) {
                 continue;
             }
 
@@ -511,22 +437,14 @@ class LaravelModelToolkit implements Toolkit
         return implode(", ", $formatted);
     }
 
-    /**
-     * Get the database columns for a model class
-     *
-     * @param string $modelClass
-     * @return array
-     */
     protected function getTableColumns(string $modelClass): array
     {
         $model = new $modelClass();
         $table = $model->getTable();
 
-        // Get all columns from the table
         $columns = DB::select("SHOW COLUMNS FROM {$table}");
-
-        // Convert to associative array
         $columnsArray = [];
+
         foreach ($columns as $column) {
             $columnsArray[$column->Field] = (object) [
                 'name' => $column->Field,
@@ -541,74 +459,30 @@ class LaravelModelToolkit implements Toolkit
         return $columnsArray;
     }
 
-    /**
-     * Map database column type to parameter type
-     *
-     * @param string $dbType
-     * @return string
-     */
     protected function mapDatabaseTypeToParameterType(string $dbType): string
     {
-        // Extract the base type without length specifications
         $baseType = strtolower(preg_replace('/\(.*\)/', '', $dbType));
 
-        // Number types
         if (in_array($baseType, ['int', 'tinyint', 'smallint', 'mediumint', 'bigint', 'decimal', 'float', 'double'])) {
-            // Special case for boolean represented as tinyint(1)
             if ($baseType === 'tinyint' && strpos($dbType, '(1)') !== false) {
                 return 'boolean';
             }
             return 'number';
         }
 
-        // Date types
         if (in_array($baseType, ['date', 'datetime', 'timestamp', 'time', 'year'])) {
             return 'date';
         }
 
-        // Boolean types
         if (in_array($baseType, ['bool', 'boolean'])) {
             return 'boolean';
         }
 
-        // JSON types
         if (in_array($baseType, ['json'])) {
             return 'json';
         }
 
-        // Default to string for all other types
         return 'string';
-    }
-
-    /**
-     * Add parameter to tool based on type
-     *
-     * @param object $tool
-     * @param string $type
-     * @param string $name
-     * @param string $description
-     * @param bool $required
-     * @return void
-     */
-    protected function addParameterByType(object $tool, string $type, string $name, string $description, bool $required): void
-    {
-        switch ($type) {
-            case 'number':
-                $tool->withNumberParameter($name, $description, required: $required);
-                break;
-            case 'boolean':
-                $tool->withBooleanParameter($name, $description, required: $required);
-                break;
-            case 'date':
-                $tool->withStringParameter($name, $description . ' (format: YYYY-MM-DD)', required: $required);
-                break;
-            case 'json':
-                $tool->withStringParameter($name, $description . ' (JSON format)', required: $required);
-                break;
-            default:
-                $tool->withStringParameter($name, $description, required: $required);
-                break;
-        }
     }
 
     protected function getAiResourceData(string $modelClass): ResourceData

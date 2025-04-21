@@ -13,14 +13,13 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | API Key
+    | Authentication Middleware
     |--------------------------------------------------------------------------
     |
-    | The API key used to authenticate MCP requests. If this is empty,
-    | no authentication will be required for API requests.
-    |
+    | The middleware used to authenticate MCP requests.
+    | We recommend using something like Sanctum here.
     */
-    'api_key' => env('LOOP_API_KEY', ''),
+    'middleware' => [],
 
     /*
     |--------------------------------------------------------------------------

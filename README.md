@@ -1,6 +1,6 @@
 # Laravel Loop
 
-This package provides AI-powered functionality for Laravel applications, including a Model Context Protocol (MCP) server implementation.
+Laravel Loop is an MCP (Model Context Protocol) Server for Laravel. You can use some pre-built tools like exposing your models, creating test data with Laravel Factories or create your own tools. Then, it's just integrate it with your favorite MCP client (Claude Code, Cursor, Windsurf, etc.).
 
 ## Installation
 
@@ -18,23 +18,25 @@ php artisan vendor:publish --provider="Kirschbaum\Loop\LoopServiceProvider" --ta
 
 ## Usage
 
-First, you must register your tools:
+First, you must register your tools (If you don't know where to put, put in `app/Providers/AppServiceProvider`):
 
 ```php
 use Kirschbaum\Loop\Loop;
 use Kirschbaum\Loop\Mode;
+use Kirschbaum\Loop\Tools;
 
-Loop::toolkit(StripeToolkit::make());
-Loop::toolkit(LaravelModelToolkit::make(
+Loop::register(Tools\LaravelModelToolkit::make(
     models: [
         \App\Models\User::class,
         \App\Models\Subscription::class,
     ]
 ));
+Loop::register(Tools\StripeToolkit::make());
+Loop::register(Tools\LaravelFactoriesToolkit::make());
 
 // Register your custom tool
-Loop::registerTool(
-    tool: CustomTool::make(
+Loop::register(
+    CustomTool::make(
         name: 'custom_tool',
         description: 'This is a custom tool',
         parameters: [
@@ -81,7 +83,7 @@ This package also provides an MCP Server with your tools which you can make it a
 To add the MCP server to Claude Code, for example, you can use the following command:
 
 ```bash
-claude mcp add laravel-loop-mcp npx opencontrol https://your-url.com api-key
+claude mcp add laravel-loop-mcp php /your/full/path/to/laravel/artisan loop:mcp:start
 ```
 
 To generate an API key, you must create a new Laravel Sanctum API token.

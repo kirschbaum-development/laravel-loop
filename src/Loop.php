@@ -49,6 +49,11 @@ class Loop
         static::$context .= "\n\n" . $context;
     }
 
+    public static function register(Toolkit $toolkit): void
+    {
+        static::$toolkits[] = $toolkit;
+    }
+
     public static function toolkit(Toolkit $toolkit): void
     {
         static::$toolkits[] = $toolkit;

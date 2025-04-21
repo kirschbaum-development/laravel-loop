@@ -6,77 +6,34 @@ use Prism\Prism\Tool;
 use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Kirschbaum\Loop\Enums\ErrorCode;
 use Kirschbaum\Loop\Enums\MessageType;
-use Kirschbaum\Loop\Exceptions\LoopMcpException;
 use Prism\Prism\Exceptions\PrismException;
+use Kirschbaum\Loop\Exceptions\LoopMcpException;
 
 class McpHandler
 {
-    /**
-     * The registered resources
-     *
-     * @var array
-     */
     protected array $resources = [];
 
-    /**
-     * The registered resource templates
-     *
-     * @var array
-     */
     protected array $resourceTemplates = [];
 
-    /**
-     * The registered tools
-     *
-     * @var array
-     */
     protected array $tools = [];
 
-    /**
-     * The registered prompts
-     *
-     * @var array
-     */
     protected array $prompts = [];
 
-    /**
-     * The server information
-     *
-     * @var array
-     */
     protected array $serverInfo;
 
-    /**
-     * The server capabilities
-     *
-     * @var array
-     */
     protected array $serverCapabilities;
 
-    /**
-     * The latest supported protocol version
-     */
     public const LATEST_PROTOCOL_VERSION = '2024-11-05';
 
-    /**
-     * Supported protocol versions
-     */
     public const SUPPORTED_PROTOCOL_VERSIONS = [
         self::LATEST_PROTOCOL_VERSION,
         '2024-10-07',
     ];
 
-    /**
-     * JSON-RPC version
-     */
     public const JSONRPC_VERSION = '2.0';
 
-    /**
-     * Create a new MCP service instance
-     *
-     * @param array $config Configuration options
-     */
     public function __construct(
         protected Loop $loop,
         protected array $config = []
@@ -87,9 +44,7 @@ class McpHandler
         ];
 
         $this->serverCapabilities = $this->config['capabilities'] ?? [
-            // 'resources' => [],
             'tools' => new \stdClass,
-            // 'prompts' => [],
         ];
     }
 
@@ -185,10 +140,9 @@ class McpHandler
     /**
      * {@inheritdoc}
      */
-    public function callTool(string $name, array $arguments, Request $request): array
+    public function callTool(string $name, array $arguments): array
     {
         $tool = $this->loop->getTool($name);
-        info('Calling tool', ['name' => $name, 'arguments' => $arguments, 'tool' => $tool->name()]);
 
         try {
             return [
@@ -232,12 +186,75 @@ class McpHandler
         }
     }
 
-    public function ping(Request $request): array
+    public function ping(): array
     {
         return [];
     }
 
-    public function processMessage(MessageType $messageType, string $method, array $params, $id, Request $request): ?array
+    public function handle(array $message): array
+    {
+        if (! isset($message['jsonrpc']) || $message['jsonrpc'] !== '2.0') {
+            return $this->formatErrorResponse(
+                null,
+                ErrorCode::INVALID_REQUEST,
+                'Invalid JSON-RPC version'
+            );
+        }
+
+        if (! isset($message['method']) || !is_string($message['method'])) {
+            return $this->formatErrorResponse(
+                $message['id'] ?? null,
+                ErrorCode::INVALID_REQUEST,
+                'Missing or invalid method'
+            );
+        }
+
+        $method = $message['method'];
+        $params = $message['params'] ?? [];
+        $id = $message['id'] ?? null;
+
+        $messageType = isset($message['id'])
+            ? MessageType::REQUEST
+            : MessageType::NOTIFICATION;
+
+        $message = $this->processMessage(
+            messageType: $messageType,
+            method: $method,
+            params: $params,
+            id: $id,
+        );
+
+        return $this->successResponse($id, $message);
+    }
+
+    protected function successResponse($id, $message): array
+    {
+        return [
+            'jsonrpc' => '2.0',
+            'id' => $id,
+            'result' => $message,
+        ];
+    }
+
+    public function formatErrorResponse($id, int $code, string $message, $data = null): array
+    {
+        $response = [
+            'jsonrpc' => '2.0',
+            'id' => $id,
+            'error' => [
+                'code' => $code,
+                'message' => $message,
+            ],
+        ];
+
+        if ($data !== null) {
+            $response['error']['data'] = $data;
+        }
+
+        return $response;
+    }
+
+    public function processMessage(MessageType $messageType, string $method, array $params, $id): ?array
     {
         try {
             switch ($method) {
@@ -249,7 +266,7 @@ class McpHandler
                     return $this->initialize($clientInfo, $capabilities, $protocolVersion);
 
                 case 'ping':
-                    return $this->ping($request);
+                    return $this->ping();
 
                 case 'resources/list':
                     return $this->emptyList('resources');
@@ -271,7 +288,6 @@ class McpHandler
                     return $this->callTool(
                         $params['name'],
                         $params['arguments'] ?? [],
-                        $request
                     );
 
                 case 'prompts/list':
