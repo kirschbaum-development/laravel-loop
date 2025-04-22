@@ -13,6 +13,7 @@ use Kirschbaum\Loop\ResourceData;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Pluralizer;
+use Filament\Forms\Components\Grid;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\Column;
 use Filament\Tables\Filters\Filter;
@@ -23,6 +24,7 @@ use Prism\Prism\Schema\StringSchema;
 use Filament\Forms\Components\Select;
 use Prism\Prism\Schema\BooleanSchema;
 use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Components\Fieldset;
 use Filament\Tables\Actions\BulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Contracts\HasTable;
@@ -36,8 +38,9 @@ use Prism\Prism\Facades\Tool as PrismTool;
 use Filament\Tables\Columns\CheckboxColumn;
 use Livewire\Component as LivewireComponent;
 use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\Grid;
+use Kirschbaum\Loop\Exceptions\LoopMcpException;
 use Filament\Support\Contracts\TranslatableContentDriver;
+use Symfony\Component\HttpFoundation\Exception\JsonException;
 
 class FilamentToolkit implements Toolkit
 {
@@ -68,22 +71,21 @@ class FilamentToolkit implements Toolkit
 
     public function getTools(): Collection
     {
-        return collect($this->getResources())->map(
-            fn (string $resource) => collect([
-                $this->listAvailableResourcesTool($resource),
-                $this->describeResourceTool($resource),
-                $this->getResourceDataTool($resource),
-                // $this->executeResourceActionTool($resource),
-            ]),
-        )->flatten();
+        return collect([
+            $this->listAvailableResourcesTool(),
+            $this->describeResourceTool(),
+            $this->getResourceDataTool(),
+        ]);
     }
 
     protected function listAvailableResourcesTool(): ?\Prism\Prism\Tool
     {
         return PrismTool::as('list_filament_resources')
-            ->for('Lists all available Filament resources')
+            ->for('Lists all available Filament resources. Filament resources are used to list, fetch and manage data for a given data resource (database table, model, etc.)')
             ->using(function () {
-                return collect($this->getResources())->map(fn (string $resource) => $resource)->implode(', ');
+                return collect($this->getResources())->map(
+                    fn (string $resource) => $resource
+                )->implode(', ');
             });
     }
 
@@ -91,27 +93,16 @@ class FilamentToolkit implements Toolkit
     {
         return PrismTool::as('describe_filament_resource')
             ->for('Describes the structure, fields, columns, actions, and relationships for a given Filament resource')
-            ->withStringParameter('resourceClass', 'The class name of the resource to describe.', required: true)
-            ->using(function (string $resourceClass) {
-                try {
-                    $resource = app($resourceClass);
-
-                    if (! $resource instanceof Resource) {
-                        return sprintf('Could not find %s resource class', $resourceClass);
-                    }
-                } catch (Exception $e) {
-                    return sprintf('Could describe %s resource class. Error: %s', $resourceClass, $e->getMessage());
-                }
+            ->withStringParameter('resource', 'The class name of the resource to describe.', required: true)
+            ->using(function (string $resource) {
+                $resource = $this->getResourceInstance($resource);
 
                 return json_encode([
                     'resource' => class_basename($resource),
                     'model' => $resource::getModel(),
-                    // 'navigation' => $this->extractNavigationInfo($resource),
-                    // 'permissions' => $this->extractPermissionsInfo($resource),
-                    'form' => $this->extractFormSchema($resource),
+                    // 'form' => $this->extractFormSchema($resource),
                     'table' => $this->extractTableSchema($resource),
                     'relationships' => $this->extractRelationshipsInfo($resource),
-                    'pages' => $this->extractPagesInfo($resource),
                 ]);
             });
     }
@@ -119,81 +110,48 @@ class FilamentToolkit implements Toolkit
     protected function getResourceDataTool(): ?\Prism\Prism\Tool
     {
         return PrismTool::as('get_filament_resource_data')
-            ->for('Gets the data for a given Filament resource, applying optional filters.')
-            ->withStringParameter('resourceClass', 'The class name of the resource to get data for.', required: true)
+            ->for('Gets the data for a given Filament resource, applying optional filters provided in the describe_filament_resource tool.')
+            ->withStringParameter('resource', 'The class name of the resource to get data for.', required: true)
             ->withStringParameter('filtersJson', 'JSON string of filters to apply (e.g., \'{"status": "published", "author_id": [1, 2]}\').', required: false)
-            ->using(function (string $resourceClass, ?string $filtersJson = null) {
-                try {
-                    $resource = app($resourceClass);
-
-                    if (! $resource instanceof Resource) {
-                        return sprintf('Error: %s is not a valid Filament resource class.', $resourceClass);
-                    }
-                } catch (Exception $e) {
-                    Log::error("Error loading resource class {$resourceClass}: {$e->getMessage()}");
-                    return sprintf('Error loading resource class %s: %s', $resourceClass, $e->getMessage());
-                }
-
-                $filters = [];
-                if ($filtersJson) {
-                    try {
-                        $decodedFilters = json_decode($filtersJson, true, 512, JSON_THROW_ON_ERROR);
-                        if (is_array($decodedFilters)) {
-                            $filters = $decodedFilters;
-                        } else {
-                            return 'Error: Invalid JSON provided for filters.';
-                        }
-                    } catch (\JsonException $e) {
-                        Log::error("Error decoding filters JSON for resource {$resourceClass}: {$e->getMessage()}");
-                        return sprintf('Error decoding filters JSON: %s', $e->getMessage());
-                    }
-                }
+            ->using(function (string $resource, ?string $filters = null) {
+                $resource = $this->getResourceInstance($resource);
+                $filters = $this->parseFilters($filters);
 
                 try {
-                    $livewireComponent = new class extends LivewireComponent implements HasTable {
-                        use \Filament\Tables\Concerns\InteractsWithTable;
-                        public function makeFilamentTranslatableContentDriver(): ?TranslatableContentDriver { return null; }
-                    };
-
-                    $table = $resource::table(new Table($livewireComponent));
-                    $tableFilters = collect($table->getFilters())->keyBy(fn (BaseFilter $filter) => $filter->getName());
-                    $query = $resource::getModel()::query();
-
-                    foreach ($filters as $filterName => $value) {
-                        if (! $tableFilter = $tableFilters->get($filterName)) {
-                            Log::warning("[Laravel Loop] Filter '{$filterName}' not found for resource '{$resourceClass}' in get_filament_resource_data tool.");
-
-                            continue;
-                        }
-
-                        if ($tableFilter instanceof SelectFilter) {
-                            $attribute = $tableFilter->getAttribute() ?? $filterName; // Use attribute if defined, else assume name matches column
-
-                            if (! str_contains($attribute, '.')) {
-                                if (is_array($value)) {
-                                    $query->whereIn($attribute, $value);
-                                } elseif ($value !== null) {
-                                    $query->where($attribute, $value);
-                                } else {
-                                    $query->whereNull($attribute);
-                                }
-                            } else {
-                                // TODO: Add support for relationship filters if needed. Could involve whereHas.
-                                Log::warning("Skipping relationship filter '{$filterName}' in get_filament_resource_data tool - not yet supported.");
-                            }
-                        } elseif ($tableFilter instanceof TernaryFilter) {
-                            // TODO: Implement TernaryFilter logic if possible/needed. Requires accessing query modification logic.
-                            Log::warning("Skipping TernaryFilter '{$filterName}' in get_filament_resource_data tool - not yet supported.");
-                        } else {
-                            // TODO: Handle other filter types (e.g., custom Filter) if needed.
-                            Log::warning("Skipping unsupported filter type for '{$filterName}' in get_filament_resource_data tool.");
-                        }
-                    }
-
+                    $listPageClass = $resource::getPages()["index"];
+                    $component = $listPageClass->getPage();
+                    $listPage = new $component();
+                    $listPage->bootedInteractsWithTable();
+                    $table = $listPage->getTable();
                     $tableColumns = $table->getColumns();
-                    $results = $query->get();
 
-                    $outputData = $results->map(function (Model $model) use ($tableColumns, $resourceClass) {
+                    // applying search
+                    collect($tableColumns)
+                        ->filter(fn (Column $column) => $column->isSearchable() && !str_contains($column->getName(), '.')) // Only direct model attributes for now
+                        ->filter(fn (Column $column) => isset($filters[$column->getName()]))
+                        ->each(function (Column $column) use (&$listPage, $filters) {
+                            $listPage->tableSearch = $filters[$column->getName()];
+                        });
+
+                    // applying filters
+                    foreach ($listPage->getTable()->getFilters() as $filter) {
+                        if ($filter->isMultiple()) {
+                            $listPage->tableFilters[$filter->getName()] = [
+                                "values" => isset($filters[$filter->getName()])
+                                    ? (array) $filters[$filter->getName()]
+                                    : null,
+                            ];
+                        } else {
+                            $listPage->tableFilters[$filter->getName()] = [
+                                "value" => $filters[$filter->getName()] ?? null,
+                            ];
+                        }
+                    }
+
+                    // TODO: Allow the tool to specify the number of results to return with a max
+                    $results = $listPage->getFilteredTableQuery()->take(10)->get();
+
+                    $outputData = $results->map(function (Model $model) use ($tableColumns) {
                         $rowData = [];
 
                         foreach ($tableColumns as $column) {
@@ -203,20 +161,22 @@ class FilamentToolkit implements Toolkit
                             try {
                                 if (str_contains($columnName, '.')) {
                                     $relationName = strtok($columnName, '.');
+
                                     if (method_exists($model, $relationName)) {
                                         $model->loadMissing($relationName);
                                         $value = data_get($model, $columnName);
                                     } else {
                                         $value = null;
-                                        Log::warning("Relation '{$relationName}' not found on model for column '{$columnName}' in resource '{$resourceClass}'.");
+                                        Log::warning("Relation '{$relationName}' not found on model for column '{$columnName}'.");
                                     }
                                 } else {
                                     $value = $model->getAttribute($columnName);
                                 }
+
                                  $rowData[$columnName] = $value;
-                             } catch (\Exception $e) {
+                             } catch (Exception $e) {
                                  $rowData[$columnName] = null;
-                                 Log::error("Could not retrieve value for column '{$columnName}' on model ID {$model->getKey()} for resource '{$resourceClass}': {$e->getMessage()}");
+                                 Log::error("Could not retrieve value for column '{$columnName}' on model ID {$model->getKey()}': {$e->getMessage()}");
                              }
                         }
 
@@ -226,23 +186,11 @@ class FilamentToolkit implements Toolkit
                     return json_encode($outputData);
 
                 } catch (Exception $e) {
-                    Log::error("Error processing resource data for {$resourceClass}: {$e->getMessage()}");
-                    return sprintf('Error processing data for resource %s: %s', $resourceClass, $e->getMessage());
+                    Log::error("[Laravel Loop] Error processing resource data: {$e->getMessage()}");
+                    Log::debug("[Laravel Loop] Error trace: " . $e->getTraceAsString());
+
+                    return sprintf('Error processing data for resource %s: %s', get_class($resource), $e->getMessage());
                 }
-            });
-    }
-
-    protected function executeResourceActionTool(): ?\Prism\Prism\Tool
-    {
-        return PrismTool::as('execute_filament_resource_action')
-            ->for('Executes an action on a given Filament resource.')
-            ->withStringParameter('resourceClass', 'The class name of the resource to execute the action on.', required: true)
-            ->withStringParameter('actionName', 'The name of the action to execute.', required: true)
-            ->withStringParameter('recordId', 'The ID of the record to execute the action on.', required: false)
-            ->using(function (string $resourceClass, string $actionName, ?string $recordId = null) {
-                $resource = app($resourceClass);
-                $action = $resource::getAction($actionName);
-
             });
     }
 
@@ -271,7 +219,7 @@ class FilamentToolkit implements Toolkit
 
         $form = $resource::form(new Form($livewireComponent));
         $fields = collect($form->getComponents(true))
-            ->reject(fn (Component $component) => $component instanceof Grid)
+            ->reject(fn (Component $component) => $component instanceof Grid || $component instanceof Fieldset)
             ->map(fn (Component $component) => $this->mapFormComponent($component, $resource))
             ->filter()
             ->values()
@@ -286,8 +234,8 @@ class FilamentToolkit implements Toolkit
             'name' => $component->getName(),
             'type' => $this->mapComponentType($component),
             'label' => $component->getLabel(),
-            'required' => $component->isRequired(),
-            'disabled' => $component->isDisabled(),
+            'required' => method_exists($component, 'isRequired') ? $component->isRequired() : null,
+            'disabled' => method_exists($component, 'isDisabled') ? $component->isDisabled() : null,
             // 'nullable' => method_exists($component, 'isNullable') ? $component->isNullable() : null, // Needs checking validation rules
         ];
 
@@ -400,7 +348,8 @@ class FilamentToolkit implements Toolkit
     protected function mapTableFilter(BaseFilter $filter): array
     {
         $baseInfo = [
-            'name' => $filter->getLabel() ?: $filter->getName(), // Prefer label, fallback to name
+            'name' => $filter->getName(),
+            'label' => $filter->getLabel(),
             'type' => $this->mapFilterType($filter),
         ];
 
@@ -470,34 +419,47 @@ class FilamentToolkit implements Toolkit
         return $relationships;
     }
 
-    protected function extractPagesInfo(Resource $resource): array
-    {
-        $pages = [];
-        foreach ($resource::getPages() as $pageName => $pageConfig) {
-            // Attempt to get URL, handle potential errors if parameters are needed
-            try {
-                // Provide dummy params for routes needing them (like 'edit')
-                $params = [];
-                if (in_array($pageName, ['edit', 'view'])) {
-                    // Need a record identifier - using a placeholder
-                    $modelClass = $resource::getModel();
-                    $dummyId = $modelClass::query()->value('id') ?? '{record}'; // Get first ID or use placeholder
-                    $params['record'] = $dummyId;
-                }
-                $pages[$pageName] = $resource::getUrl($pageName, $params);
-            } catch (\Exception $e) {
-                // Could not generate URL (e.g., missing required parameters)
-                $pages[$pageName] = "Error generating URL for '{$pageName}': " . $e->getMessage();
-            }
-        }
-        return $pages;
-    }
-
     public function getTool(string $name): ?\Prism\Prism\Tool
     {
         // TODO: Avoid building all tools if we only need one
         return $this->getTools()->first(
             fn ($tool) => $tool->name() === $name
         );
+    }
+
+    protected function getResourceInstance(string $resourceClass): Resource
+    {
+        try {
+            $resource = app($resourceClass);
+
+            if (! $resource instanceof Resource) {
+                throw new LoopMcpException(sprintf('Could not find %s resource class', $resourceClass));
+            }
+
+            return $resource;
+        } catch (Exception $e) {
+            throw new LoopMcpException(sprintf('Could describe %s resource class. Error: %s', $resourceClass, $e->getMessage()));
+        }
+    }
+
+    protected function parseFilters(string $filtersJson): array
+    {
+        $filters = [];
+
+        if ($filtersJson) {
+            try {
+                $decodedFilters = json_decode($filtersJson, true, 512, JSON_THROW_ON_ERROR);
+
+                if (is_array($decodedFilters)) {
+                    $filters = $decodedFilters;
+                } else {
+                    throw new LoopMcpException('Error: Invalid JSON provided for filters.');
+                }
+            } catch (JsonException $e) {
+                throw new LoopMcpException(sprintf('Error decoding filters JSON: %s', $e->getMessage()));
+            }
+        }
+
+        return $filters;
     }
 }

@@ -18,13 +18,14 @@ php artisan vendor:publish --provider="Kirschbaum\Loop\LoopServiceProvider" --ta
 
 ## Usage
 
-First, you must register your tools (If you don't know where to put, put in `app/Providers/AppServiceProvider`):
+First, you must register your tools (If you don't know where to put, put in `app/Providers/AppServiceProvider`). The package provides some pre-built tools:
 
 ```php
 use Kirschbaum\Loop\Loop;
 use Kirschbaum\Loop\Mode;
 use Kirschbaum\Loop\Tools;
 
+Loop::register(Tools\FilamentToolkit::make());
 Loop::register(Tools\LaravelModelToolkit::make(
     models: [
         \App\Models\User::class,
@@ -33,8 +34,11 @@ Loop::register(Tools\LaravelModelToolkit::make(
 ));
 Loop::register(Tools\StripeToolkit::make());
 Loop::register(Tools\LaravelFactoriesToolkit::make());
+```
 
-// Register your custom tool
+But, the power comes from your custom tools.
+
+```php
 Loop::register(
     CustomTool::make(
         name: 'custom_tool',
@@ -50,40 +54,53 @@ Loop::register(
 );
 ```
 
-### Custom Tools
-
-You can also create your own tools by extending the `Tool` class and registering it with the `Loop` class.
+You can also build your own tool classes by ...
 
 ```php
 use Kirschbaum\Loop\Loop;
-use Kirschbaum\Loop\Mode;
-use Kirschbaum\Loop\Tools\StripeTool;
-use Kirschbaum\Loop\Tools\LaravelModelTool;
-use Kirschbaum\Loop\Tools\FilamentResourceTool;
 
-Loop::registerTool(
-    tool: CustomTool::make(
-        name: 'custom_tool',
-        description: 'This is a custom tool',
-        parameters: [
-            'name' => 'string',
-            'age' => 'integer',
-        ],
-        execute: function (array $parameters) {
-            return sprintf('Hello, %s! You are %d years old.', $parameters['name'], $parameters['age']);
-        },
-    ),
-);
 ```
 
-### MCP (Model Context Protocol) Server
+## MCP (Model Context Protocol) Server
 
-This package also provides an MCP Server with your tools which you can make it available to your MCP clients (Claude Code, Cursor, etc.).
+### STDIO
 
-To add the MCP server to Claude Code, for example, you can use the following command:
+To connect Laravel Loop MCP server to Claude Code, for example, you can use the following command:
 
 ```bash
 claude mcp add laravel-loop-mcp php /your/full/path/to/laravel/artisan loop:mcp:start
+
+# with an authenticated user
+claude mcp add laravel-loop-mcp php /your/full/path/to/laravel/artisan loop:mcp:start --user-id=1 --user-model=App\Models\User
+
+# with debug mode
+claude mcp add laravel-loop-mcp php /your/full/path/to/laravel/artisan loop:mcp:start --debug
 ```
 
-To generate an API key, you must create a new Laravel Sanctum API token.
+To add to Cursor, or any (most?) MCP clients with a config file:
+
+```bash
+{
+  "mcpServers": {
+    "laravel-loop-mcp": {
+      "command": "php",
+      "args": [
+        "/your/full/path/to/laravel/artisan",
+        "loop:mcp:start",
+        "--user-id=1"
+      ]
+    }
+  }
+}
+```
+
+### SSE
+
+Coming soon.
+
+## Roadmap
+
+- [ ] Add a chat component to the package, so you can use the tools inside the application without an MCP client.
+- [ ] Refine the existing tools
+- [ ] Add write capabilities to the existing tools
+- [ ] Add tests

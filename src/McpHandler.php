@@ -4,6 +4,7 @@ namespace Kirschbaum\Loop;
 
 use Prism\Prism\Tool;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Kirschbaum\Loop\Enums\ErrorCode;
@@ -44,7 +45,7 @@ class McpHandler
         ];
 
         $this->serverCapabilities = $this->config['capabilities'] ?? [
-            'tools' => new \stdClass,
+            'tools' => $this->listTools(),
         ];
     }
 
@@ -156,6 +157,7 @@ class McpHandler
         } catch (PrismException $e) {
             Log::error("Error calling tool {$name}: {$e->getMessage()}", [
                 'arguments' => $arguments,
+                'trace' => $e->getTrace(),
                 'exception' => $e->getPrevious()?->getMessage(),
             ]);
 
@@ -209,16 +211,13 @@ class McpHandler
             );
         }
 
+        // TODO: Handle/log errors like {\"jsonrpc\":\"2.0\",\"id\":0,\"error\":{\"code\":-32601,\"message\":\"Method not found\"}
+
         $method = $message['method'];
         $params = $message['params'] ?? [];
         $id = $message['id'] ?? null;
 
-        $messageType = isset($message['id'])
-            ? MessageType::REQUEST
-            : MessageType::NOTIFICATION;
-
         $message = $this->processMessage(
-            messageType: $messageType,
             method: $method,
             params: $params,
             id: $id,
@@ -254,9 +253,17 @@ class McpHandler
         return $response;
     }
 
-    public function processMessage(MessageType $messageType, string $method, array $params, $id): ?array
+    public function processMessage(string $method, array $params, $id): ?array
     {
+        $messageType = Str::startsWith($method, 'notification')
+            ? MessageType::NOTIFICATION
+            : MessageType::REQUEST;
+
         try {
+            if ($messageType === MessageType::NOTIFICATION) {
+                return ['success' => true];
+            }
+
             switch ($method) {
                 case 'initialize':
                     $clientInfo = $params['clientInfo'] ?? [];
