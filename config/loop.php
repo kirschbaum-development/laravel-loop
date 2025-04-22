@@ -11,33 +11,24 @@ return [
     |
     */
 
-    /*
-    |--------------------------------------------------------------------------
-    | Authentication Middleware
-    |--------------------------------------------------------------------------
-    |
-    | The middleware used to authenticate MCP requests.
-    | We recommend using something like Sanctum here.
-    */
-    'middleware' => [],
+    'sse' => [
+        /*
+        |--------------------------------------------------------------------------
+        | SSE Endpoint Enabled?
+        |--------------------------------------------------------------------------
+        */
+        'enabled' => env('LOOP_SSE_ENABLED', false),
 
-    /*
-    |--------------------------------------------------------------------------
-    | Default Model
-    |--------------------------------------------------------------------------
-    |
-    | The default AI model to use for MCP requests.
-    |
-    */
-    'default_model' => env('LOOP_DEFAULT_MODEL', 'gpt-4o-mini'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Enable API Authentication
-    |--------------------------------------------------------------------------
-    |
-    | Whether to enable API key authentication for MCP requests.
-    |
-    */
-    'enable_auth' => env('LOOP_ENABLE_AUTH', true),
+        /*
+        |--------------------------------------------------------------------------
+        | SSE Endpoint Authentication Middleware
+        |--------------------------------------------------------------------------
+        |
+        | The middleware used to authenticate MCP requests.
+        | We recommend using something like Laravel Sanctum here.
+        |
+        | WARNING: DO NOT LEAVE THIS ENDPOINT ENABLED AND UNPROTECTED IN PRODUCTION.
+        */
+        'middleware' => ['auth:sanctum'],
+    ],
 ];

@@ -13,7 +13,7 @@ composer require kirschbaum/laravel-loop
 Publish the configuration file:
 
 ```bash
-php artisan vendor:publish --provider="Kirschbaum\Loop\LoopServiceProvider" --tag="config"
+php artisan vendor:publish --tag="loop-config"
 ```
 
 ## Usage
