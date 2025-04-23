@@ -1,14 +1,14 @@
 <?php
 
-namespace Kirschbaum\Loop\Tools;
+namespace Kirschbaum\Loop\Toolkits;
 
 use Exception;
-use Stripe\StripeClient;
 use Illuminate\Support\Collection;
-use Kirschbaum\Loop\Enums\ErrorCode;
-use Kirschbaum\Loop\Enums\MessageType;
-use Stripe\Exception\ApiErrorException;
+use Kirschbaum\Loop\Collections\ToolCollection;
+use Kirschbaum\Loop\Contracts\Toolkit;
 use Prism\Prism\Facades\Tool as PrismTool;
+use Stripe\Exception\ApiErrorException;
+use Stripe\StripeClient;
 
 class StripeToolkit implements Toolkit
 {
@@ -27,9 +27,9 @@ class StripeToolkit implements Toolkit
         return new self(...$args);
     }
 
-    public function getTools(): Collection
+    public function getTools(): ToolCollection
     {
-        return collect([
+        return new ToolCollection([
             $this->getApiTool(),
         ]);
     }

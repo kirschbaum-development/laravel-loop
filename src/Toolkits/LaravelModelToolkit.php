@@ -1,21 +1,23 @@
 <?php
 
-namespace Kirschbaum\Loop\Tools;
+namespace Kirschbaum\Loop\Toolkits;
 
 use Exception;
-use ReflectionClass;
-use Kirschbaum\Loop\Enums\Mode;
 use Filament\Resources\Resource;
-use Kirschbaum\Loop\ResourceData;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Pluralizer;
-use Prism\Prism\Schema\NumberSchema;
-use Prism\Prism\Schema\ObjectSchema;
-use Prism\Prism\Schema\StringSchema;
-use Prism\Prism\Schema\BooleanSchema;
-use Illuminate\Database\Eloquent\Model;
+use Kirschbaum\Loop\Collections\ToolCollection;
+use Kirschbaum\Loop\Contracts\Toolkit;
+use Kirschbaum\Loop\Enums\Mode;
+use Kirschbaum\Loop\ResourceData;
+use Kirschbaum\Loop\Tools\Models\DescribeModelTool;
 use Prism\Prism\Facades\Tool as PrismTool;
+use Prism\Prism\Schema\BooleanSchema;
+use Prism\Prism\Schema\NumberSchema;
+use Prism\Prism\Schema\StringSchema;
+use ReflectionClass;
 
 class LaravelModelToolkit implements Toolkit
 {
@@ -30,78 +32,26 @@ class LaravelModelToolkit implements Toolkit
         return new self(...$args);
     }
 
-    public function getTools(): Collection
+    public function getTools(): ToolCollection
     {
-        return collect($this->models)->map(
-            fn (string $model) => $this->buildModelTools($model)
-        )->flatten();
+        $tools = new ToolCollection();
+
+        foreach ($this->models as $model) {
+            $tools->merge($this->buildModelTools($model));
+        }
+
+        return $tools;
     }
 
-    public function getTool(string $name): ?\Prism\Prism\Tool
-    {
-        // TODO: Avoid building all tools if we only need one
-        return $this->getTools()->first(
-            fn ($tool) => $tool->name() === $name
-        );
-    }
-
-    protected function buildModelTools(string $model): Collection
+    protected function buildModelTools(string $model): ToolCollection
     {
         $aiResourceData = $this->getAiResourceData($model);
 
-        return collect([
-            $this->createDescribeModelTool($aiResourceData->model, $aiResourceData->label, $aiResourceData->pluralLabel),
+        return new ToolCollection([
+            DescribeModelTool::make($aiResourceData->model, $aiResourceData->label, $aiResourceData->pluralLabel),
             $this->createListTool($aiResourceData->model, $aiResourceData->label, $aiResourceData->pluralLabel),
             $this->createFetchTool($aiResourceData->model, $aiResourceData->label),
         ]);
-    }
-
-    protected function createDescribeModelTool(string $modelClass, string $label, string $pluralLabel): object
-    {
-        $modelName = class_basename($modelClass);
-        $toolName = strtolower($modelName) . '_describe';
-
-        return PrismTool::as($toolName)
-            ->for("Get detailed information about the {$pluralLabel} table, with all its fields and relationships.")
-            ->using(function () use ($modelClass, $label): string {
-                try {
-                    $tableColumns = $this->getTableColumns($modelClass);
-                    $relationships = $this->getDocblockRelationships($modelClass);
-
-                    $model = new $modelClass();
-                    $tableName = $model->getTable();
-                    $primaryKey = $model->getKeyName();
-                    $fillable = $model->getFillable();
-
-                    $data = [
-                        'label' => $label,
-                        'basic_information' => [
-                            'model_class' => $modelClass,
-                            'table_name' => $tableName,
-                            'primary_key' => $primaryKey,
-                        ],
-                        'database_fields' => [],
-                        'relationships' => [],
-                    ];
-
-                    foreach ($tableColumns as $column) {
-                        $data['database_fields'][] = [
-                            'field' => $column->name,
-                            'type' => $column->type,
-                            'nullable' => $column->nullable,
-                            'has_default' => $column->has_default,
-                            'default_value' => $column->default,
-                            'fillable' => in_array($column->name, $fillable),
-                        ];
-                    }
-
-                    $data['relationships'] = $relationships;
-
-                    return json_encode($data, JSON_PRETTY_PRINT);
-                } catch (Exception $e) {
-                    return json_encode(['error' => "Error retrieving model information: " . $e->getMessage()]);
-                }
-            });
     }
 
     protected function createListTool(string $modelClass, string $label, string $pluralLabel): object

@@ -105,7 +105,7 @@ class McpHandler
         $this->loop->setup();
 
         return [
-            'tools' => $this->loop->getTools()->map(function (Tool $tool) {
+            'tools' => $this->loop->getPrismTools()->map(function (Tool $tool) {
                 $tool = $tool instanceof Tool ? $tool : $tool->getTool();
                 $parameters = $tool->parameters();
                 $hasParameters = count($parameters) > 0;
@@ -143,7 +143,7 @@ class McpHandler
      */
     public function callTool(string $name, array $arguments): array
     {
-        $tool = $this->loop->getTool($name);
+        $tool = $this->loop->getPrismTool($name);
 
         try {
             return [
