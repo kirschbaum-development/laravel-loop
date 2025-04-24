@@ -2,7 +2,6 @@
 
 namespace Kirschbaum\Loop\Contracts;
 
-use Illuminate\Support\Collection;
 use Kirschbaum\Loop\Collections\ToolCollection;
 
 interface Toolkit

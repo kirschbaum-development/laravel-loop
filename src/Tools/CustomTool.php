@@ -16,8 +16,7 @@ class CustomTool implements Tool
         public readonly string $description,
         public readonly array $parameters,
         public readonly Closure $handler,
-    ) {
-    }
+    ) {}
 
     public function build(): PrismTool
     {

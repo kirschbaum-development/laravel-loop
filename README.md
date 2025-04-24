@@ -24,6 +24,7 @@ First, you must register your tools (If you don't know where to put, put in `app
 use Illuminate\Support\ServiceProvider;
 use Kirschbaum\Loop\Facades\Loop;
 use Kirschbaum\Loop\Toolkits;
+use Kirschbaum\Loop\Tools;
 
 Loop::toolkit(Toolkits\FilamentToolkit::make());
 Loop::toolkit(Toolkits\LaravelModelToolkit::make(
@@ -32,8 +33,8 @@ Loop::toolkit(Toolkits\LaravelModelToolkit::make(
         \App\Models\Subscription::class,
     ]
 ));
-Loop::toolkit(Toolkits\StripeToolkit::make());
 Loop::toolkit(Toolkits\LaravelFactoriesToolkit::make());
+Loop::tool(Tools\StripeTool::make());
 ```
 
 But, the power comes from your custom tools.

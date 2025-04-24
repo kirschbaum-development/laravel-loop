@@ -3,19 +3,10 @@
 namespace Kirschbaum\Loop\Tools\Models;
 
 use Exception;
-use Filament\Resources\Resource;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Pluralizer;
 use Kirschbaum\Loop\Concerns\Makeable;
 use Kirschbaum\Loop\Contracts\Tool;
-use Kirschbaum\Loop\Contracts\Toolkit;
-use Kirschbaum\Loop\Enums\Mode;
-use Kirschbaum\Loop\ResourceData;
-use Prism\Prism\Schema\BooleanSchema;
-use Prism\Prism\Schema\NumberSchema;
-use Prism\Prism\Schema\StringSchema;
+use Kirschbaum\Loop\Tools\Models\Concerns\ProvidesModelColumns;
 use Prism\Prism\Tool as PrismTool;
 use ReflectionClass;
 
@@ -25,24 +16,26 @@ use ReflectionClass;
 class DescribeModelTool implements Tool
 {
     use Makeable;
+    use ProvidesModelColumns;
 
     public function __construct(
+        /** @param  class-string<Model> $modelClass */
         private string $modelClass,
         private string $label,
         private string $pluralLabel
-    ) {
-    }
+    ) {}
 
     public function build(): PrismTool
     {
-        return PrismTool::as($this->getName())
+        return app(PrismTool::class)
+            ->as($this->getName())
             ->for("Get detailed information about the {$this->pluralLabel} table, with all its fields and relationships.")
             ->using(function (): string {
                 try {
                     $tableColumns = $this->getTableColumns($this->modelClass);
                     $relationships = $this->getDocblockRelationships($this->modelClass);
 
-                    $model = new $this->modelClass();
+                    $model = new $this->modelClass;
                     $tableName = $model->getTable();
                     $primaryKey = $model->getKeyName();
                     $fillable = $model->getFillable();
@@ -73,7 +66,7 @@ class DescribeModelTool implements Tool
 
                     return json_encode($data, JSON_PRETTY_PRINT);
                 } catch (Exception $e) {
-                    return json_encode(['error' => "Error retrieving model information: " . $e->getMessage()]);
+                    return json_encode(['error' => 'Error retrieving model information: '.$e->getMessage()]);
                 }
             });
     }
@@ -82,7 +75,7 @@ class DescribeModelTool implements Tool
     {
         $modelName = class_basename($this->modelClass);
 
-        return strtolower($modelName) . '_describe';
+        return strtolower($modelName).'_describe_model';
     }
 
     protected function getDocblockRelationships(string $modelClass): array
@@ -90,7 +83,7 @@ class DescribeModelTool implements Tool
         $reflection = new ReflectionClass($modelClass);
         $docComment = $reflection->getDocComment();
 
-        if (!$docComment) {
+        if (! $docComment) {
             return [];
         }
 
@@ -105,7 +98,7 @@ class DescribeModelTool implements Tool
             }
 
             try {
-                $model = new $modelClass();
+                $model = new $modelClass;
                 $relatedModel = $matches[1];
                 $property = ltrim($matches[2], '$');
 
@@ -129,27 +122,5 @@ class DescribeModelTool implements Tool
         }
 
         return $properties;
-    }
-
-    protected function getTableColumns(string $modelClass): array
-    {
-        $model = new $modelClass();
-        $table = $model->getTable();
-
-        $columns = DB::select("SHOW COLUMNS FROM {$table}");
-        $columnsArray = [];
-
-        foreach ($columns as $column) {
-            $columnsArray[$column->Field] = (object) [
-                'name' => $column->Field,
-                'type' => $column->Type,
-                'nullable' => $column->Null === 'YES',
-                'has_default' => $column->Default !== null || $column->Extra === 'auto_increment',
-                'default' => $column->Default,
-                'extra' => $column->Extra,
-            ];
-        }
-
-        return $columnsArray;
     }
 }

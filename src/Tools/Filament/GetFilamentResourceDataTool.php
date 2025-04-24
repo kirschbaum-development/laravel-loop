@@ -3,10 +3,8 @@
 namespace Kirschbaum\Loop\Tools\Filament;
 
 use Exception;
-use Filament\Facades\Filament;
 use Filament\Tables\Columns\Column;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Kirschbaum\Loop\Concerns\Makeable;
 use Kirschbaum\Loop\Contracts\Tool;
@@ -32,16 +30,16 @@ class GetFilamentResourceDataTool implements Tool
                 $filters = $this->parseFilters($filters);
 
                 try {
-                    $listPageClass = $resource::getPages()["index"];
+                    $listPageClass = $resource::getPages()['index'];
                     $component = $listPageClass->getPage();
-                    $listPage = new $component();
+                    $listPage = new $component;
                     $listPage->bootedInteractsWithTable();
                     $table = $listPage->getTable();
                     $tableColumns = $table->getColumns();
 
                     // applying search
                     collect($tableColumns)
-                        ->filter(fn (Column $column) => $column->isSearchable() && !str_contains($column->getName(), '.')) // Only direct model attributes for now
+                        ->filter(fn (Column $column) => $column->isSearchable() && ! str_contains($column->getName(), '.')) // Only direct model attributes for now
                         ->filter(fn (Column $column) => isset($filters[$column->getName()]))
                         ->each(function (Column $column) use (&$listPage, $filters) {
                             $listPage->tableSearch = $filters[$column->getName()];
@@ -51,13 +49,13 @@ class GetFilamentResourceDataTool implements Tool
                     foreach ($listPage->getTable()->getFilters() as $filter) {
                         if ($filter->isMultiple()) {
                             $listPage->tableFilters[$filter->getName()] = [
-                                "values" => isset($filters[$filter->getName()])
+                                'values' => isset($filters[$filter->getName()])
                                     ? (array) $filters[$filter->getName()]
                                     : null,
                             ];
                         } else {
                             $listPage->tableFilters[$filter->getName()] = [
-                                "value" => $filters[$filter->getName()] ?? null,
+                                'value' => $filters[$filter->getName()] ?? null,
                             ];
                         }
                     }
@@ -101,7 +99,7 @@ class GetFilamentResourceDataTool implements Tool
 
                 } catch (Exception $e) {
                     Log::error("[Laravel Loop] Error processing resource data: {$e->getMessage()}");
-                    Log::debug("[Laravel Loop] Error trace: " . $e->getTraceAsString());
+                    Log::debug('[Laravel Loop] Error trace: '.$e->getTraceAsString());
 
                     return sprintf('Error processing data for resource %s: %s', get_class($resource), $e->getMessage());
                 }

@@ -67,7 +67,8 @@ class DescribeFilamentResourceTool implements Tool
 
     protected function extractFormSchema(Resource $resource): array
     {
-        $livewireComponent = new class extends LivewireComponent implements HasForms {
+        $livewireComponent = new class extends LivewireComponent implements HasForms
+        {
             use \Filament\Forms\Concerns\InteractsWithForms;
         };
 
@@ -93,7 +94,7 @@ class DescribeFilamentResourceTool implements Tool
 
     protected function extractRelationshipsInfo(Resource $resource): array
     {
-        if (!method_exists($resource, 'getRelations')) {
+        if (! method_exists($resource, 'getRelations')) {
             return [];
         }
 
@@ -125,10 +126,12 @@ class DescribeFilamentResourceTool implements Tool
     protected function extractTableSchema(Resource $resource): array
     {
         try {
-            $livewireComponent = new class extends LivewireComponent implements HasTable {
+            $livewireComponent = new class extends LivewireComponent implements HasTable
+            {
                 use \Filament\Tables\Concerns\InteractsWithTable;
 
-                public function makeFilamentTranslatableContentDriver(): ?TranslatableContentDriver {
+                public function makeFilamentTranslatableContentDriver(): ?TranslatableContentDriver
+                {
                     return null;
                 }
             };
@@ -156,11 +159,11 @@ class DescribeFilamentResourceTool implements Tool
             $filters = array_merge($searchableColumnFilters, $existingFilters); // Merge, giving priority to existing explicit filters if names collide
 
             $rowActions = collect($table->getActions()) // Actions column actions
-            ->map(fn (Action $action) => $this->mapTableAction($action))
+                ->map(fn (Action $action) => $this->mapTableAction($action))
                 ->all();
 
             $bulkActions = collect($table->getBulkActions()) // Bulk actions
-            ->map(fn (BulkAction $action) => $this->mapTableAction($action))
+                ->map(fn (BulkAction $action) => $this->mapTableAction($action))
                 ->all();
 
             return [
@@ -236,10 +239,11 @@ class DescribeFilamentResourceTool implements Tool
         return $baseInfo;
     }
 
-    protected function mapTableAction(Action | BulkAction $action): string
+    protected function mapTableAction(Action|BulkAction $action): string
     {
         // Map common actions to simple strings, fallback to action name
         $name = $action->getName();
+
         return match ($name) {
             'view', 'edit', 'delete', 'forceDelete', 'restore', 'replicate' => $name,
             default => $name, // Return the action name itself

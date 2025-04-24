@@ -1,10 +1,10 @@
 <?php
 
 namespace Kirschbaum\Loop;
+
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Kirschbaum\Loop\Collections\ToolCollection;
-use Kirschbaum\Loop\Collections\ToolkitCollection;
 use Kirschbaum\Loop\Contracts\Tool;
 use Kirschbaum\Loop\Contracts\Toolkit;
 use Prism\Prism\Enums\Provider;
@@ -18,17 +18,16 @@ class Loop
 {
     protected ToolCollection $tools;
 
-    protected string $context = "";
+    protected string $context = '';
 
     public function __construct()
     {
-        $this->tools = new ToolCollection();
-        $this->toolkits = new ToolkitCollection();
+        $this->tools = new ToolCollection;
     }
 
     public function context(string $context): static
     {
-        $this->context .= "\n\n" . $context;
+        $this->context .= "\n\n".$context;
 
         return $this;
     }

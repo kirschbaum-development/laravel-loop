@@ -1,19 +1,22 @@
 <?php
 
-namespace Kirschbaum\Loop\Toolkits;
+namespace Kirschbaum\Loop\Tools;
 
 use Exception;
-use Illuminate\Support\Collection;
-use Kirschbaum\Loop\Collections\ToolCollection;
-use Kirschbaum\Loop\Contracts\Toolkit;
-use Prism\Prism\Facades\Tool as PrismTool;
+use Kirschbaum\Loop\Concerns\Makeable;
+use Kirschbaum\Loop\Contracts\Tool;
+use Prism\Prism\Tool as PrismTool;
 use Stripe\Exception\ApiErrorException;
 use Stripe\StripeClient;
 
-class StripeToolkit implements Toolkit
+/**
+ * @method static make(string $apiKey = null, string $description = null)
+ */
+class StripeTool implements Tool
 {
-    protected string $name = "stripe_tool";
-    public string $description = "make a call to the stripe api. You can use this tool to fetch any stripe related data.";
+    use Makeable;
+
+    public string $description = 'make a call to the stripe api. You can use this tool to fetch any stripe related data.';
 
     public function __construct(
         public readonly ?string $apiKey = null,
@@ -22,36 +25,21 @@ class StripeToolkit implements Toolkit
         $this->description = $description ?? $this->description;
     }
 
-    public static function make(...$args): static
+    public function getName(): string
     {
-        return new self(...$args);
+        return 'stripe_tool';
     }
 
-    public function getTools(): ToolCollection
+    public function build(): PrismTool
     {
-        return new ToolCollection([
-            $this->getApiTool(),
-        ]);
-    }
-
-    public function getTool(string $name): ?\Prism\Prism\Tool
-    {
-        if ($name !== $this->name) {
-            return null;
-        }
-
-        return $this->getApiTool();
-    }
-
-    public function getApiTool(): \Prism\Prism\Tool
-    {
-        return PrismTool::as($this->name)
+        return app(PrismTool::class)
+            ->as($this->getName())
             ->for($this->description)
-            ->withStringParameter('method', "HTTP method to use (GET, POST, PUT, DELETE, etc.)", required: true)
-            ->withStringParameter('path', "Path to call (e.g. /v1/customers)", required: true)
-            ->withStringParameter('body', "HTTP body to use if it is not GET (can be JSON string or other format)", required: false)
-            ->withStringParameter('contentType', "HTTP content type to use (default: application/json)", required: false)
-            ->withStringParameter(name: 'query', description: "Query parameters to include in the request as a JSON object", required: false)
+            ->withStringParameter('method', 'HTTP method to use (GET, POST, PUT, DELETE, etc.)', required: true)
+            ->withStringParameter('path', 'Path to call (e.g. /v1/customers)', required: true)
+            ->withStringParameter('body', 'HTTP body to use if it is not GET (can be JSON string or other format)', required: false)
+            ->withStringParameter('contentType', 'HTTP content type to use (default: application/json)', required: false)
+            ->withStringParameter(name: 'query', description: 'Query parameters to include in the request as a JSON object', required: false)
             ->using(function ($method, $path, $body = null, $contentType = null, $query = null): string {
                 if (! class_exists(StripeClient::class)) {
                     return "Error: Stripe SDK not installed. Please install it using 'composer require stripe/stripe-php'.";
@@ -79,7 +67,7 @@ class StripeToolkit implements Toolkit
                     $bodyData = null;
 
                     // Parse body if provided and method is not GET
-                    if ($body !== null && !empty($body) && $method !== 'GET') {
+                    if ($body !== null && ! empty($body) && $method !== 'GET') {
                         // Determine content type, default to application/json
                         $effectiveContentType = $contentType ?: 'application/json';
 
@@ -112,8 +100,8 @@ class StripeToolkit implements Toolkit
                     $resourceName = $pathParts[0] ?? null;
 
                     // No resource name found, can't proceed
-                    if (!$resourceName) {
-                        return "Error: Invalid Stripe API path";
+                    if (! $resourceName) {
+                        return 'Error: Invalid Stripe API path';
                     }
 
                     // Handle the request based on the method and path structure
@@ -125,8 +113,8 @@ class StripeToolkit implements Toolkit
                             } else {
                                 // Get specific resource (e.g., /customers/{id})
                                 $id = $pathParts[1] ?? null;
-                                if (!$id) {
-                                    return "Error: Resource ID required for GET request";
+                                if (! $id) {
+                                    return 'Error: Resource ID required for GET request';
                                 }
 
                                 // Check if this is a nested resource
@@ -156,8 +144,8 @@ class StripeToolkit implements Toolkit
                             } else {
                                 // Update specific resource or call a resource method
                                 $id = $pathParts[1] ?? null;
-                                if (!$id) {
-                                    return "Error: Resource ID required for POST request";
+                                if (! $id) {
+                                    return 'Error: Resource ID required for POST request';
                                 }
 
                                 // Check if this is a nested resource or action
@@ -187,12 +175,12 @@ class StripeToolkit implements Toolkit
 
                         case 'DELETE':
                             if (count($pathParts) < 2) {
-                                return "Error: Resource ID required for DELETE request";
+                                return 'Error: Resource ID required for DELETE request';
                             }
 
                             $id = $pathParts[1] ?? null;
-                            if (!$id) {
-                                return "Error: Resource ID required for DELETE request";
+                            if (! $id) {
+                                return 'Error: Resource ID required for DELETE request';
                             }
 
                             $response = $stripe->{$resourceName}->delete($id, $queryData);
@@ -212,7 +200,7 @@ class StripeToolkit implements Toolkit
                         $errorDetails = json_encode($e->getJsonBody());
                     }
 
-                    return "Error making Stripe API call to '$method $path': " . $errorDetails;
+                    return "Error making Stripe API call to '$method $path': ".$errorDetails;
                 }
             });
     }

@@ -5,23 +5,21 @@ namespace Kirschbaum\Loop\Tools\Filament;
 use Filament\Facades\Filament;
 use Filament\Resources\Resource;
 use Illuminate\Support\Collection;
+use Kirschbaum\Loop\Concerns\Makeable;
 use Kirschbaum\Loop\Contracts\Tool;
 use Prism\Prism\Tool as PrismTool;
 
+/**
+ * @method static make(array $resources = [])
+ */
 class ListFilamentResourcesTool implements Tool
 {
-    /**
-     * @param Resource[] $resources
-     */
-    public function __construct(private array $resources = []) {}
+    use Makeable;
 
     /**
-     * @param Resource[] $resources
+     * @param  resource[]  $resources
      */
-    public static function make(array $resources = []): static
-    {
-        return new self($resources);
-    }
+    public function __construct(private array $resources = []) {}
 
     public function build(): PrismTool
     {

@@ -27,7 +27,7 @@ class DescribeModelFactoryTool implements Tool
                 $factoryPath = $this->getFactoryPath();
                 $namespace = $this->getFactoryNamespace();
 
-                if (!File::isDirectory($factoryPath)) {
+                if (! File::isDirectory($factoryPath)) {
                     return "Factory directory not found at {$factoryPath}.";
                 }
 
@@ -35,15 +35,15 @@ class DescribeModelFactoryTool implements Tool
                 $files = File::files($factoryPath);
 
                 foreach ($files as $file) {
-                    $className = $namespace . $file->getBasename('.php');
+                    $className = $namespace.$file->getBasename('.php');
 
-                    if (!class_exists($className)) {
+                    if (! class_exists($className)) {
                         continue;
                     }
 
                     try {
                         $reflection = new ReflectionClass($className);
-                        if (!$reflection->isSubclassOf(Factory::class) || $reflection->isAbstract()) {
+                        if (! $reflection->isSubclassOf(Factory::class) || $reflection->isAbstract()) {
                             continue;
                         }
 
@@ -60,6 +60,7 @@ class DescribeModelFactoryTool implements Tool
                                     'guessFactoryNamesUsing', 'useNamespace', 'lazy', 'count',
                                     'connection', 'recycle', 'sequence', 'has', 'for',
                                 ];
+
                                 return in_array($name, $baseMethods, true) || Str::startsWith($name, '__');
                             })
                             ->sort()
@@ -73,6 +74,7 @@ class DescribeModelFactoryTool implements Tool
                     } catch (BindingResolutionException|\ReflectionException $e) {
                         // Could not reflect or instantiate, log and skip
                         Log::warning("Could not reflect or instantiate factory {$className}: {$e->getMessage()}");
+
                         continue;
                     }
                 }
@@ -87,8 +89,8 @@ class DescribeModelFactoryTool implements Tool
                     $shortName = Arr::last(explode('\\', $factoryClass));
                     $output .= "- Factory: {$shortName} ({$factoryClass})\n";
                     $output .= "  Model: {$info['model']}\n";
-                    if (!empty($info['methods'])) {
-                        $output .= "  Available States/Methods: \n    - " . implode("\n    - ", $info['methods']) . "\n";
+                    if (! empty($info['methods'])) {
+                        $output .= "  Available States/Methods: \n    - ".implode("\n    - ", $info['methods'])."\n";
                     } else {
                         $output .= "  Available States/Methods: None\n";
                     }

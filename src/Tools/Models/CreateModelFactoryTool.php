@@ -2,21 +2,15 @@
 
 namespace Kirschbaum\Loop\Tools\Models;
 
-use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Kirschbaum\Loop\Concerns\Makeable;
 use Kirschbaum\Loop\Contracts\Tool;
-use Kirschbaum\Loop\Contracts\Toolkit;
-use Prism\Prism\Tool as PrismTool;
 use Prism\Prism\Schema\StringSchema;
-use ReflectionClass;
-use ReflectionMethod;
+use Prism\Prism\Tool as PrismTool;
 use Throwable;
 
 class CreateModelFactoryTool implements Tool
@@ -60,7 +54,7 @@ class CreateModelFactoryTool implements Tool
 
                 $factoryClass = $this->findFactoryClass($factoryIdentifier);
 
-                if (!$factoryClass) {
+                if (! $factoryClass) {
                     return "Error: Factory '{$factoryIdentifier}' not found.";
                 }
 
@@ -90,7 +84,7 @@ class CreateModelFactoryTool implements Tool
                     $persistenceMessage = 'created and saved';
 
                     return sprintf(
-                        "Successfully %s %d instance(s) of %s using %s. %s",
+                        'Successfully %s %d instance(s) of %s using %s. %s',
                         $persistenceMessage,
                         $resultCount,
                         $modelClass,
@@ -99,11 +93,13 @@ class CreateModelFactoryTool implements Tool
                     );
 
                 } catch (InvalidArgumentException $e) {
-                    Log::error("Factory creation error for {$factoryClass}: " . $e->getMessage());
-                    return "Error: Invalid arguments provided for factory {$factoryClass}. Check attribute names and types. Details: " . $e->getMessage();
+                    Log::error("Factory creation error for {$factoryClass}: ".$e->getMessage());
+
+                    return "Error: Invalid arguments provided for factory {$factoryClass}. Check attribute names and types. Details: ".$e->getMessage();
                 } catch (Throwable $e) {
-                    Log::error("Factory creation failed for {$factoryClass}: " . $e->getMessage(), ['exception' => $e]);
-                    return "Error: Failed to {$action} models using factory {$factoryClass}. Details: " . $e->getMessage();
+                    Log::error("Factory creation failed for {$factoryClass}: ".$e->getMessage(), ['exception' => $e]);
+
+                    return "Error: Failed to {$action} models using factory {$factoryClass}. Details: ".$e->getMessage();
                 }
             });
     }
@@ -123,13 +119,13 @@ class CreateModelFactoryTool implements Tool
         }
 
         // Assume it's a short name and prepend namespace
-        $potentialClass = $namespace . Str::finish($identifier, 'Factory');
+        $potentialClass = $namespace.Str::finish($identifier, 'Factory');
         if (class_exists($potentialClass) && is_subclass_of($potentialClass, Factory::class)) {
             return $potentialClass;
         }
 
         // Try without appending Factory suffix if already present
-        $potentialClass = $namespace . $identifier;
+        $potentialClass = $namespace.$identifier;
         if (class_exists($potentialClass) && is_subclass_of($potentialClass, Factory::class)) {
             return $potentialClass;
         }
