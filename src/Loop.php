@@ -2,61 +2,50 @@
 
 namespace Kirschbaum\Loop;
 
-use Prism\Prism\Prism;
-use App\Models\TimeEntry;
-use Illuminate\Support\Str;
-use App\Models\BudgetPeriod;
-use Prism\Prism\Facades\Tool;
-use Filament\Facades\Filament;
-use Prism\Prism\Text\Response;
-use Prism\Prism\Enums\Provider;
-use Filament\Resources\Resource;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Pluralizer;
 use Illuminate\Support\Facades\Auth;
-use Prism\Prism\Schema\NumberSchema;
-use Prism\Prism\Schema\ObjectSchema;
-use Prism\Prism\Schema\StringSchema;
-use Kirschbaum\Loop\Tools\StripeTool;
-use Prism\Prism\Schema\BooleanSchema;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Eloquent\Model;
-use Stripe\Exception\ApiErrorException;
-use App\Filament\Resources\UserResource;
-use App\Filament\Resources\BudgetResource;
-use App\Filament\Resources\HolidayResource;
-use App\Filament\Resources\InvoiceResource;
-use App\Filament\Resources\ProjectResource;
-use App\Filament\Resources\AllocationResource;
-use App\Filament\Resources\TeamMemberResource;
-use Kirschbaum\Loop\Tools\Toolkit;
-use Prism\Prism\ValueObjects\Messages\UserMessage;
+use Kirschbaum\Loop\Collections\ToolCollection;
+use Kirschbaum\Loop\Contracts\Tool;
+use Kirschbaum\Loop\Contracts\Toolkit;
+use Prism\Prism\Enums\Provider;
+use Prism\Prism\Prism;
+use Prism\Prism\Text\Response;
+use Prism\Prism\Tool as PrismTool;
 use Prism\Prism\ValueObjects\Messages\AssistantMessage;
+use Prism\Prism\ValueObjects\Messages\UserMessage;
 
 class Loop
 {
-    protected Collection $tools;
-    protected static string $context = "";
+    protected ToolCollection $tools;
 
-    /**
-     * @var \Kirschbaum\Loop\Tools\Toolkit[]
-     */
-    protected static array $toolkits = [];
+    protected string $context = '';
 
-    public static function additionalContext(string $context): void
+    public function __construct()
     {
-        static::$context .= "\n\n" . $context;
+        $this->tools = new ToolCollection;
     }
 
-    public static function register(Toolkit $toolkit): void
+    public function context(string $context): static
     {
-        static::$toolkits[] = $toolkit;
+        $this->context .= "\n\n".$context;
+
+        return $this;
     }
 
-    public static function toolkit(Toolkit $toolkit): void
+    public function tool(Tool $tool): static
     {
-        static::$toolkits[] = $toolkit;
+        $this->tools->push($tool);
+
+        return $this;
+    }
+
+    public function toolkit(Toolkit $toolkit): static
+    {
+        foreach ($toolkit->getTools() as $tool) {
+            $this->tool($tool);
+        }
+
+        return $this;
     }
 
     public function setup(): void
@@ -82,7 +71,7 @@ class Loop
             now()->format('F'),
             now()->format('d'),
             config('database.default'),
-            static::$context,
+            $this->context,
             Auth::user()->name,
             Auth::user()->id,
         );
@@ -104,21 +93,19 @@ class Loop
             ->withMaxSteps(10)
             ->withMessages($messages)
             ->withSystemPrompt($prompt)
-            ->withTools($this->tools->toArray())
+            ->withTools($this->getPrismTools())
             ->asText();
     }
 
-    public function getTools(): Collection
+    public function getPrismTools(): Collection
     {
-        return collect(static::$toolkits)->map(
-            fn (Toolkit $toolkit) => $toolkit->getTools()
-        )->flatten();
+        return $this->tools
+            ->toBase()
+            ->map(fn (Tool $tool) => $tool->build());
     }
 
-    public function getTool(string $name): object
+    public function getPrismTool(string $name): PrismTool
     {
-        return collect(static::$toolkits)->map(
-            fn (Toolkit $toolkit) => $toolkit->getTool($name)
-        )->filter()->first();
+        return $this->tools->getTool($name)->build();
     }
 }

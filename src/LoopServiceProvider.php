@@ -2,9 +2,9 @@
 
 namespace Kirschbaum\Loop;
 
+use Kirschbaum\Loop\Commands\LoopMcpServerStartCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use Kirschbaum\Loop\Commands\LoopMcpServerStartCommand;
 
 class LoopServiceProvider extends PackageServiceProvider
 {
@@ -23,14 +23,13 @@ class LoopServiceProvider extends PackageServiceProvider
             ->hasConfigFile()
             ->hasCommands([
                 LoopMcpServerStartCommand::class,
-            ])
-        ;
+            ]);
     }
 
     public function packageBooted(): void
     {
-        $this->app->singleton(Loop::class, function ($app) {
-            $loop = new Loop();
+        $this->app->scoped(Loop::class, function ($app) {
+            $loop = new Loop;
             $loop->setup();
 
             return $loop;

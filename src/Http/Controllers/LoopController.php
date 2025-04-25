@@ -2,18 +2,17 @@
 
 namespace Kirschbaum\Loop\Http\Controllers;
 
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Collection;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Cache;
 use Kirschbaum\Loop\Http\Requests\AskRequest;
 use Kirschbaum\Loop\Loop;
-use Prism\Prism\Text\Response as PrismResponse;
 
 class LoopController extends Controller
 {
     protected Loop $loop;
+
     protected string $cacheKey = 'loop_mcp_messages';
 
     public function __construct(Loop $loop)
@@ -23,9 +22,6 @@ class LoopController extends Controller
 
     /**
      * Ask the AI a question
-     *
-     * @param AskRequest $request
-     * @return JsonResponse
      */
     public function ask(AskRequest $request): JsonResponse
     {
@@ -72,9 +68,6 @@ class LoopController extends Controller
 
     /**
      * Store a new message in the conversation
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function storeMessage(Request $request): JsonResponse
     {
@@ -100,9 +93,6 @@ class LoopController extends Controller
 
     /**
      * Store a message in the cache
-     *
-     * @param array $message
-     * @return void
      */
     protected function storeMessageInCache(array $message): void
     {
@@ -113,8 +103,6 @@ class LoopController extends Controller
 
     /**
      * Get all messages in the conversation
-     *
-     * @return JsonResponse
      */
     public function getMessages(): JsonResponse
     {
@@ -132,8 +120,6 @@ class LoopController extends Controller
 
     /**
      * Clear all messages in the conversation
-     *
-     * @return JsonResponse
      */
     public function clearMessages(): JsonResponse
     {
@@ -147,8 +133,6 @@ class LoopController extends Controller
 
     /**
      * Get stored messages from cache
-     *
-     * @return array
      */
     protected function getStoredMessages(): array
     {

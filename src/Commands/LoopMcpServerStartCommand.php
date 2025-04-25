@@ -3,11 +3,11 @@
 namespace Kirschbaum\Loop\Commands;
 
 use Exception;
-use React\EventLoop\Loop;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Auth;
-use Kirschbaum\Loop\McpHandler;
 use Kirschbaum\Loop\Enums\ErrorCode;
+use Kirschbaum\Loop\McpHandler;
+use React\EventLoop\Loop;
 use React\Stream\ReadableResourceStream;
 use React\Stream\WritableResourceStream;
 
@@ -27,7 +27,7 @@ class LoopMcpServerStartCommand extends Command
 
     public function handle(McpHandler $mcpHandler)
     {
-        $this->info("Starting OpenControl MCP proxy server");
+        $this->info('Starting OpenControl MCP proxy server');
 
         if ($this->option('user-id')) {
             $userModel = $this->option('user-model') ?? 'App\\Models\\User';
@@ -49,7 +49,7 @@ class LoopMcpServerStartCommand extends Command
 
         $stdin->on('data', function ($data) use ($stdout, $mcpHandler) {
             if ($this->option('debug')) {
-                $this->comment('Received data: ' . $data);
+                $this->comment('Received data: '.$data);
             }
 
             try {
@@ -57,14 +57,14 @@ class LoopMcpServerStartCommand extends Command
                 $response = $mcpHandler->handle($message);
 
                 if ($this->option('debug')) {
-                    $this->comment('Response: ' . json_encode($response));
+                    $this->comment('Response: '.json_encode($response));
                 }
 
                 if (isset($message['id'])) {
-                    $stdout->write(json_encode($response) . PHP_EOL);
+                    $stdout->write(json_encode($response).PHP_EOL);
                 }
             } catch (Exception $e) {
-                $this->error("Error processing message: " . $e->getMessage());
+                $this->error('Error processing message: '.$e->getMessage());
 
                 $response = $mcpHandler->formatErrorResponse(
                     $message['id'] ?? '',
@@ -72,34 +72,34 @@ class LoopMcpServerStartCommand extends Command
                     $e->getMessage()
                 );
 
-                $stdout->write(json_encode($response) . PHP_EOL);
+                $stdout->write(json_encode($response).PHP_EOL);
             }
         });
 
-        $this->info("Laravel Loop MCP server running. Press Ctrl+C or send SIGTERM to stop.");
+        $this->info('Laravel Loop MCP server running. Press Ctrl+C or send SIGTERM to stop.');
 
         // Add signal handlers if pcntl is available
         if (function_exists('pcntl_signal')) {
             $loop->addSignal(SIGINT, function ($signal) use ($loop) {
-                info("Received signal: " . $signal . ". Shutting down...");
-                $this->info("Received signal: " . $signal . ". Shutting down...");
+                info('Received signal: '.$signal.'. Shutting down...');
+                $this->info('Received signal: '.$signal.'. Shutting down...');
                 $loop->stop();
                 exit(0);
             });
 
             $loop->addSignal(SIGTERM, function ($signal) use ($loop) {
-                info("Received signal: " . $signal . ". Shutting down...");
-                $this->info("Received signal: " . $signal . ". Shutting down...");
+                info('Received signal: '.$signal.'. Shutting down...');
+                $this->info('Received signal: '.$signal.'. Shutting down...');
                 $loop->stop();
                 exit(0);
             });
         } else {
-            $this->warn("PCNTL extension not available. Signal handling disabled. Use Ctrl+C if supported by your environment.");
+            $this->warn('PCNTL extension not available. Signal handling disabled. Use Ctrl+C if supported by your environment.');
         }
 
         $loop->run();
 
-        $this->info("Laravel Loop MCP server stopped.");
+        $this->info('Laravel Loop MCP server stopped.');
 
         return Command::SUCCESS;
     }

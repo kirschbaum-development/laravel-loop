@@ -21,25 +21,29 @@ php artisan vendor:publish --tag="loop-config"
 First, you must register your tools (If you don't know where to put, put in `app/Providers/AppServiceProvider`). The package provides some pre-built tools:
 
 ```php
-use Kirschbaum\Loop\Loop;
-use Kirschbaum\Loop\Mode;
+use Illuminate\Support\ServiceProvider;
+use Kirschbaum\Loop\Facades\Loop;
+use Kirschbaum\Loop\Toolkits;
 use Kirschbaum\Loop\Tools;
 
-Loop::register(Tools\FilamentToolkit::make());
-Loop::register(Tools\LaravelModelToolkit::make(
+Loop::toolkit(Toolkits\FilamentToolkit::make());
+Loop::toolkit(Toolkits\LaravelModelToolkit::make(
     models: [
         \App\Models\User::class,
         \App\Models\Subscription::class,
     ]
 ));
-Loop::register(Tools\StripeToolkit::make());
-Loop::register(Tools\LaravelFactoriesToolkit::make());
+Loop::toolkit(Toolkits\LaravelFactoriesToolkit::make());
+Loop::tool(Tools\StripeTool::make());
 ```
 
 But, the power comes from your custom tools.
 
 ```php
-Loop::register(
+use Kirschbaum\Loop\Facades\Loop;
+use Kirschbaum\Loop\Tools\CustomTool;
+
+Loop::tool(
     CustomTool::make(
         name: 'custom_tool',
         description: 'This is a custom tool',

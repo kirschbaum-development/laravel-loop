@@ -8,6 +8,5 @@ class ResourceData
         public string $model,
         public string $label,
         public string $pluralLabel,
-    ) {
-    }
+    ) {}
 }
