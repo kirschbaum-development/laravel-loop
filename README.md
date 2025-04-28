@@ -67,7 +67,9 @@ use Kirschbaum\Loop\Loop;
 
 ## MCP (Model Context Protocol) Server
 
-### STDIO
+This package provides an MCP Server with your tools which you can make available to your MCP clients (Claude Code, Cursor, etc.).
+
+#### CLI/STDIO Interface
 
 To connect Laravel Loop MCP server to Claude Code, for example, you can use the following command:
 
@@ -108,3 +110,35 @@ Coming soon.
 - [ ] Refine the existing tools
 - [ ] Add write capabilities to the existing tools
 - [ ] Add tests
+=======
+#### HTTP Server-Sent Events (SSE) Interface
+
+For web-based clients or HTTP-native tools, you can use the SSE endpoint:
+
+```
+POST /mcp/sse
+```
+
+This endpoint accepts MCP requests via POST with `Content-Type: application/json` and streams back responses using the `text/event-stream` format (SSE).
+
+##### Example using curl:
+
+```bash
+curl -N -X POST -H "Content-Type: application/json" \
+     -H "Accept: text/event-stream" \
+     -d '{"jsonrpc": "2.0", "method": "ping", "id": 1}' \
+     http://your-app.test/mcp/sse
+```
+
+Expected output:
+
+```
+id: 1
+event: mcp_response
+data: {"jsonrpc":"2.0","id":1,"result":{}}
+
+```
+
+### Authentication
+
+To generate an API key, you must create a new Laravel Sanctum API token. This API key can be used with both the CLI and HTTP SSE interfaces.
