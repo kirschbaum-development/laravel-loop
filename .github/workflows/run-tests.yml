@@ -50,5 +50,8 @@ jobs:
       - name: List Installed Dependencies
         run: composer show -D
 
+      - name: Fix vendor permissions
+        run: sudo chown -R $USER:$USER $GITHUB_WORKSPACE/vendor
+
       - name: Execute tests
         run: vendor/bin/pest --ci --bail --compact --memory --coverage --parallel
