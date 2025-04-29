@@ -14,10 +14,10 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         php: [8.3, 8.4]
-        laravel: [11.*, 12.*]
+        laravel: [^11.5.3, 12.*]
         stability: [prefer-lowest, prefer-stable]
         include:
-          - laravel: 11.*
+          - laravel: ^11.5.3
             testbench: 9.*
             carbon: ^2.63
           - laravel: 12.*
@@ -49,9 +49,6 @@ jobs:
 
       - name: List Installed Dependencies
         run: composer show -D
-
-      - name: Fix vendor permissions
-        run: sudo chown -R $USER:$USER $GITHUB_WORKSPACE/vendor
 
       - name: Execute tests
         run: vendor/bin/pest --ci --bail --compact --memory --coverage --parallel
