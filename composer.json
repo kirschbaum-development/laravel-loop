@@ -1,6 +1,6 @@
 {
     "name": "kirschbaum-development/laravel-loop",
-    "description": "A package to ",
+    "description": "Laravel Loop is an MCP (Model Context Protocol) Server for Laravel",
     "type": "library",
     "license": "MIT",
     "autoload": {
@@ -23,10 +23,6 @@
         "spatie/laravel-package-tools": "^1.18",
         "illuminate/support": "^11.0|^12.0",
         "illuminate/database": "^11.0|^12.0",
-        "livewire/livewire": "^3.5",
-        "filament/support": "^3.2",
-        "filament/notifications": "^3.2",
-        "filament/filament": "^3.2",
         "prism-php/prism": "^0.56.0",
         "react/event-loop": "^1.5",
         "react/stream": "^1.4"
@@ -44,7 +40,11 @@
         "orchestra/testbench": "^9.9|^10.0",
         "pestphp/pest-plugin-laravel": "^3.1",
         "pestphp/pest-plugin-livewire": "^3.0",
-        "laravel/pint": "^1.21"
+        "laravel/pint": "^1.21",
+        "livewire/livewire": "^3.5",
+        "filament/support": "^3.2",
+        "filament/notifications": "^3.2",
+        "filament/filament": "^3.2"
     },
     "config": {
         "allow-plugins": {

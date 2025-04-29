@@ -5,7 +5,7 @@ use Kirschbaum\Loop\Http\Controllers\McpController;
 use Kirschbaum\Loop\Http\Middleware\SseEnabledMiddleware;
 
 Route::prefix('mcp')
-    ->middleware([SseEnabledMiddleware::class] + config('loop.sse.middleware', []))
+    ->middleware(array_merge([SseEnabledMiddleware::class], (array) config('loop.sse.middleware', [])))
     ->group(function () {
         Route::get('/', McpController::class);
         Route::post('/', McpController::class);

@@ -24,7 +24,7 @@ class GetFilamentResourceDataTool implements Tool
             ->as($this->getName())
             ->for('Gets the data for a given Filament resource, applying optional filters provided in the describe_filament_resource tool.')
             ->withStringParameter('resource', 'The class name of the resource to get data for.', required: true)
-            ->withStringParameter('filtersJson', 'JSON string of filters to apply (e.g., \'{"status": "published", "author_id": [1, 2]}\').', required: false)
+            ->withStringParameter('filters', 'JSON string of filters to apply (e.g., \'{"status": "published", "author_id": [1, 2]}\').', required: false)
             ->using(function (string $resource, ?string $filters = null) {
                 $resource = $this->getResourceInstance($resource);
                 $filters = $this->parseFilters($filters);
@@ -37,7 +37,6 @@ class GetFilamentResourceDataTool implements Tool
                     $table = $listPage->getTable();
                     $tableColumns = $table->getColumns();
 
-                    // applying search
                     collect($tableColumns)
                         ->filter(fn (Column $column) => $column->isSearchable() && ! str_contains($column->getName(), '.')) // Only direct model attributes for now
                         ->filter(fn (Column $column) => isset($filters[$column->getName()]))
@@ -45,7 +44,6 @@ class GetFilamentResourceDataTool implements Tool
                             $listPage->tableSearch = $filters[$column->getName()];
                         });
 
-                    // applying filters
                     foreach ($listPage->getTable()->getFilters() as $filter) {
                         if ($filter->isMultiple()) {
                             $listPage->tableFilters[$filter->getName()] = [

@@ -1,6 +1,20 @@
 # Laravel Loop
 
-Laravel Loop is an MCP (Model Context Protocol) Server for Laravel. You can use some pre-built tools like exposing your models, creating test data with Laravel Factories or create your own tools. Then, it's just integrate it with your favorite MCP client (Claude Code, Cursor, Windsurf, etc.).
+Laravel Loop is a powerful Model Context Protocol (MCP) server designed specifically for Laravel applications. It connects your Laravel application with AI assistants using MCP.
+
+## What It Does
+
+Laravel Loop allows you to:
+
+- Create and expose your own tools directly integrated with your Laravel application
+- Connect with MCP clients like Claude Code, Cursor, Windsurf, and more
+
+It also ships with some pre-built tools:
+
+- Expose your data through Laravel Models using our pre-built toolkit (`LaravelModelToolkit`)
+- Expose your Filament Resources (`FilamentToolkit`)
+- Generate test data using Laravel Factories (`LaravelFactoriesToolkit`)
+- Talk with the Stripe API (`StripeTool`)
 
 ## Installation
 
@@ -51,7 +65,7 @@ Loop::tool(
             'name' => ['type' => 'string', 'description' => 'The name of the user', 'required' => true],
             'age' => ['type' => 'integer', 'description' => 'The age of the user'],
         ],
-        execute: function (string $name, ?int $age = null) {
+        handler: function (string $name, ?int $age = null) {
             return sprintf('Hello, %s! You are %d years old.', $name, $age ?? 'unknown');
         },
     ),
