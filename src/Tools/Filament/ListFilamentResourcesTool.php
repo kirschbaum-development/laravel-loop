@@ -10,7 +10,7 @@ use Kirschbaum\Loop\Contracts\Tool;
 use Prism\Prism\Tool as PrismTool;
 
 /**
- * @method static make(array $resources = [])
+ * @method static static make(array $resources = [])
  */
 class ListFilamentResourcesTool implements Tool
 {

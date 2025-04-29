@@ -4,8 +4,10 @@ namespace Kirschbaum\Loop\Concerns;
 
 trait Makeable
 {
+    /** @phpstan-ignore-next-line */
     public static function make(...$args): static
     {
-        return new self(...$args);
+        /** @phpstan-ignore-next-line */
+        return new static(...$args);
     }
 }

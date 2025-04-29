@@ -6,7 +6,7 @@ trait MapsDatabaseTypeToParameterType
 {
     protected function mapDatabaseTypeToParameterType(string $dbType): string
     {
-        $baseType = strtolower(preg_replace('/\(.*\)/', '', $dbType));
+        $baseType = strtolower((string) preg_replace('/\(.*\)/', '', $dbType));
 
         if (in_array($baseType, ['int', 'tinyint', 'smallint', 'mediumint', 'bigint', 'decimal', 'float', 'double'])) {
             if ($baseType === 'tinyint' && strpos($dbType, '(1)') !== false) {

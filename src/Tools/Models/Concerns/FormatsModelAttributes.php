@@ -8,6 +8,7 @@ trait FormatsModelAttributes
 {
     protected function formatModelAttributes(Model $model, bool $detailed = false): string
     {
+        /** @var array<string, mixed> $attributes */
         $attributes = $model->getAttributes();
         $formatted = [];
 
@@ -20,7 +21,10 @@ trait FormatsModelAttributes
                 $value = $value->format('Y-m-d H:i:s');
             }
 
-            $formatted[] = "{$key}: {$value}";
+            $row = "{$key}: ";
+            $row .= is_scalar($value) ? $value : 'Not a scalar value';
+
+            $formatted[] = $row;
         }
 
         return implode(', ', $formatted);

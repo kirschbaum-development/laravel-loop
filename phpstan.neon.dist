@@ -1,0 +1,20 @@
+includes:
+    - ./vendor/larastan/larastan/extension.neon
+    - phpstan-baseline.neon
+
+parameters:
+    tmpDir: build/phpstan
+
+    level: 9
+
+    paths:
+        - src
+        - config
+
+    excludePaths:
+        - src/Tools/Filament
+        - src/Tools/StripeTool.php
+
+    checkOctaneCompatibility: true
+    checkModelProperties: true
+    noEnvCallsOutsideOfConfig: false

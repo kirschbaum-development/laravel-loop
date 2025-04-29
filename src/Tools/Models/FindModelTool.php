@@ -25,7 +25,8 @@ class FindModelTool implements Tool
 
     public function build(): PrismTool
     {
-        return PrismTool::as($this->getName())
+        return app(PrismTool::class)
+            ->as($this->getName())
             ->for("Fetch a specific {$this->label} by ID or its primary key.")
             ->withObjectParameter(
                 'data',
@@ -39,7 +40,7 @@ class FindModelTool implements Tool
             )
             ->using(function ($data): string {
                 if (is_object($data)) {
-                    $data = json_decode(json_encode($data), true) ?: [];
+                    $data = json_decode((string) json_encode($data), true) ?: [];
                 }
 
                 $id = $data['id'];

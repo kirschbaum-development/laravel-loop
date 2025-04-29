@@ -5,6 +5,7 @@ namespace Kirschbaum\Loop\Tools;
 use Closure;
 use Kirschbaum\Loop\Concerns\Makeable;
 use Kirschbaum\Loop\Contracts\Tool;
+use Prism\Prism\Contracts\Schema;
 use Prism\Prism\Schema\BooleanSchema;
 use Prism\Prism\Schema\NumberSchema;
 use Prism\Prism\Schema\ObjectSchema;
@@ -18,6 +19,7 @@ class CustomTool implements Tool
     public function __construct(
         public readonly string $name,
         public readonly string $description,
+        /** @var array<string, array{type?: string, description?: string, required?: bool}> */
         public readonly array $parameters,
         public readonly Closure $handler,
     ) {}
@@ -50,12 +52,24 @@ class CustomTool implements Tool
         }
     }
 
+    /**
+     * @param  array<string, mixed>  $config
+     */
     private function buildObjectParameter(PrismTool $tool, string $name, array $config): void
     {
+        /** @var string $description */
         $description = $config['description'] ?? '';
+
+        /** @var bool $required */
         $required = $config['required'] ?? false;
+
+        /** @var array<string, array<string, mixed>> $properties */
         $properties = $config['properties'] ?? [];
+
+        /** @var array<int, string> $requiredFields */
         $requiredFields = $config['required_fields'] ?? [];
+
+        /** @var bool $allowAdditional */
         $allowAdditional = $config['allow_additional_properties'] ?? false;
 
         $schemaProperties = $this->buildSchemaArray($properties);
@@ -71,8 +85,8 @@ class CustomTool implements Tool
     }
 
     /**
-     * @param array<string, array> $parameters
-     * @return array<\Prism\Prism\Contracts\Schema>
+     * @param  array<string, array<string, mixed>>  $parameters
+     * @return array<Schema>
      */
     private function buildSchemaArray(array $parameters): array
     {
@@ -80,7 +94,18 @@ class CustomTool implements Tool
 
         foreach ($parameters as $name => $config) {
             $type = $config['type'] ?? 'string';
+
+            /** @var string $description */
             $description = $config['description'] ?? '';
+
+            /** @var array<string, array<string, mixed>> $properties */
+            $properties = $config['properties'] ?? [];
+
+            /** @var array<int, string> $requiredFields */
+            $requiredFields = $config['required_fields'] ?? [];
+
+            /** @var bool $allowAdditional */
+            $allowAdditional = $config['allow_additional_properties'] ?? false;
 
             $schemaArray[] = match ($type) {
                 'string' => new StringSchema($name, $description),
@@ -89,9 +114,9 @@ class CustomTool implements Tool
                 'object' => new ObjectSchema(
                     $name,
                     $description,
-                    $this->buildSchemaArray($config['properties'] ?? []),
-                    $config['required_fields'] ?? [],
-                    $config['allow_additional_properties'] ?? false
+                    $this->buildSchemaArray($properties),
+                    $requiredFields,
+                    $allowAdditional,
                 ),
                 default => new StringSchema($name, $description),
             };

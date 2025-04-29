@@ -19,7 +19,7 @@ class DescribeModelTool implements Tool
     use ProvidesModelColumns;
 
     public function __construct(
-        /** @param  class-string<Model> $modelClass */
+        /** @var class-string<Model> */
         private string $modelClass,
         private string $label,
         private string $pluralLabel
@@ -35,6 +35,7 @@ class DescribeModelTool implements Tool
                     $tableColumns = $this->getTableColumns($this->modelClass);
                     $relationships = $this->getDocblockRelationships($this->modelClass);
 
+                    /** @var Model $model */
                     $model = new $this->modelClass;
                     $tableName = $model->getTable();
                     $primaryKey = $model->getKeyName();
@@ -64,9 +65,9 @@ class DescribeModelTool implements Tool
 
                     $data['relationships'] = $relationships;
 
-                    return json_encode($data, JSON_PRETTY_PRINT);
+                    return (string) json_encode($data, JSON_PRETTY_PRINT);
                 } catch (Exception $e) {
-                    return json_encode(['error' => 'Error retrieving model information: '.$e->getMessage()]);
+                    return (string) json_encode(['error' => 'Error retrieving model information: '.$e->getMessage()]);
                 }
             });
     }
@@ -78,6 +79,10 @@ class DescribeModelTool implements Tool
         return strtolower($modelName).'_describe_model';
     }
 
+    /**
+     * @param  class-string<Model>  $modelClass
+     * @return array<array-key, array<array-key, mixed>>
+     */
     protected function getDocblockRelationships(string $modelClass): array
     {
         $reflection = new ReflectionClass($modelClass);
@@ -106,8 +111,10 @@ class DescribeModelTool implements Tool
                     continue;
                 }
 
+                /** @var \ReflectionNamedType|null $returnType */
                 $returnType = $reflection->getMethod($property)->getReturnType();
 
+                /** @var object $relation */
                 $relation = $model->$property();
 
                 $properties[] = [

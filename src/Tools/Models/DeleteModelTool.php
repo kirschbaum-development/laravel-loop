@@ -39,7 +39,7 @@ class DeleteModelTool implements Tool
             ->using(function ($data): string {
                 // Convert the object to array if it's not already
                 if (is_object($data)) {
-                    $data = json_decode(json_encode($data), true) ?: [];
+                    $data = json_decode((string) json_encode($data), true) ?: [];
                 }
 
                 // Extract id parameter (should always be present due to required fields)

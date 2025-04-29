@@ -18,12 +18,15 @@ use Kirschbaum\Loop\Tools\Models\ListModelsTool;
 use Kirschbaum\Loop\Tools\Models\UpdateModelTool;
 
 /**
- * @method static self make(array $models, Mode $mode = Mode::ReadOnly)
+ * @method static self make(Model[] $models, Mode $mode = Mode::ReadOnly)
  */
 class LaravelModelToolkit implements Toolkit
 {
     use Makeable;
 
+    /**
+     * @param  list<Model>  $models
+     */
     public function __construct(
         public readonly array $models = [],
         public readonly Mode $mode = Mode::ReadOnly,
@@ -46,7 +49,7 @@ class LaravelModelToolkit implements Toolkit
 
         return new ToolCollection([
             DescribeModelTool::make($aiResourceData->model, $aiResourceData->label, $aiResourceData->pluralLabel),
-            ListModelsTool::make($aiResourceData->model, $aiResourceData->label, $aiResourceData->pluralLabel),
+            ListModelsTool::make($aiResourceData->model, $aiResourceData->pluralLabel),
             FindModelTool::make($aiResourceData->model, $aiResourceData->label),
             // ...$this->mode === Mode::ReadWrite ? [
             //     CreateModelTool::make($aiResourceData->model, $aiResourceData->label),
