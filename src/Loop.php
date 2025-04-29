@@ -53,6 +53,9 @@ class Loop
         //
     }
 
+    /**
+     * @param  Collection<array-key, mixed>  $messages
+     */
     public function ask(string $question, Collection $messages): Response
     {
         $prompt = sprintf(
@@ -70,10 +73,10 @@ class Loop
             now()->format('Y-m-d'),
             now()->format('F'),
             now()->format('d'),
-            config('database.default'),
+            config()->string('database.default'),
             $this->context,
-            Auth::user()->name,
-            Auth::user()->id,
+            Auth::user()?->name, /** @phpstan-ignore  property.notFound */
+            Auth::user()?->id,
         );
         dump($prompt);
 

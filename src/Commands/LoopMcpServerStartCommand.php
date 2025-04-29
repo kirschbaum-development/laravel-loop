@@ -25,7 +25,7 @@ class LoopMcpServerStartCommand extends Command
 
     protected $description = 'Run the Laravel Loop MCP server';
 
-    public function handle(McpHandler $mcpHandler)
+    public function handle(McpHandler $mcpHandler): int
     {
         $this->info('Starting OpenControl MCP proxy server');
 

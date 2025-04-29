@@ -29,7 +29,7 @@ class CreateModelTool implements Tool
 
     public function build(): PrismTool
     {
-        // Get a model instance to access its methods
+        /** @var Model $modelInstance */
         $modelInstance = new $this->modelClass;
         $fillableAttributes = $modelInstance->getFillable();
 
@@ -77,7 +77,7 @@ class CreateModelTool implements Tool
                 try {
                     // Convert the object to array if it's not already
                     if (is_object($data)) {
-                        $data = json_decode(json_encode($data), true) ?: [];
+                        $data = json_decode((string) json_encode($data), true) ?: [];
                     }
 
                     // Filter to only include fillable attributes

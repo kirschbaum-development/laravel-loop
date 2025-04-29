@@ -48,6 +48,7 @@ class CreateModelFactoryTool implements Tool
             )
             ->using(function (string $factoryName, int $count, array $states, array $attributes): string {
                 $factoryIdentifier = $factoryName;
+                $action = 'create';
                 $count = max(1, $count);
                 $states = (array) $states;
                 $attributes = (array) $attributes;
@@ -75,7 +76,6 @@ class CreateModelFactoryTool implements Tool
                     }
 
                     // Create or Make models
-                    $action = 'create';
                     $models = $factory->$action($attributes);
 
                     $modelClass = $factory->modelName();

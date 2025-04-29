@@ -12,7 +12,7 @@ use Prism\Prism\Schema\StringSchema;
 use Prism\Prism\Tool as PrismTool;
 
 /**
- * @method static self make(string $modelClass, string $label, string $pluralLabel)
+ * @method static self make(string $modelClass, string $pluralLabel)
  */
 class ListModelsTool implements Tool
 {
@@ -22,7 +22,6 @@ class ListModelsTool implements Tool
     public function __construct(
         /** @param  class-string<Model> $modelClass */
         private string $modelClass,
-        private string $label,
         private string $pluralLabel
     ) {}
 
@@ -48,7 +47,7 @@ class ListModelsTool implements Tool
             ->using(function ($data): string {
                 try {
                     if (is_object($data)) {
-                        $data = json_decode(json_encode($data), true) ?? [];
+                        $data = json_decode((string) json_encode($data), true) ?? [];
                     }
 
                     $limit = $data['limit'] ?? 10;

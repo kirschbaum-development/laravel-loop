@@ -12,7 +12,7 @@ use Kirschbaum\Loop\Tools\Filament\GetFilamentResourceDataTool;
 use Kirschbaum\Loop\Tools\Filament\ListFilamentResourcesTool;
 
 /**
- * @method static self make(array $resources, Mode $mode = Mode::ReadOnly)
+ * @method static self make(Resource[] $resources, Mode $mode = Mode::ReadOnly)
  */
 class FilamentToolkit implements Toolkit
 {

@@ -27,14 +27,16 @@ class LoopController extends Controller
     {
         info('Request received', $request->all());
 
-        // If no messages are provided, use the stored messages
+        /** @var array<array-key, mixed> $messages */
         $messages = $request->input('messages');
+
+        // If no messages are provided, use the stored messages
         if (empty($messages)) {
             $messages = $this->getStoredMessages();
         }
 
         $response = $this->loop->ask(
-            $request->input('message'),
+            $request->string('message'),
             collect($messages)
         );
 
@@ -133,6 +135,8 @@ class LoopController extends Controller
 
     /**
      * Get stored messages from cache
+     *
+     * @return array<array-key, mixed>
      */
     protected function getStoredMessages(): array
     {

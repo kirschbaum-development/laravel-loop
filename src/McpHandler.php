@@ -12,16 +12,22 @@ use Prism\Prism\Tool;
 
 class McpHandler
 {
+    /** @var array<array-key, mixed> */
     protected array $resources = [];
 
+    /** @var array<array-key, mixed> */
     protected array $resourceTemplates = [];
 
+    /** @var array<array-key, mixed> */
     protected array $tools = [];
 
+    /** @var array<array-key, mixed> */
     protected array $prompts = [];
 
+    /** @var array<array-key, mixed> */
     protected array $serverInfo;
 
+    /** @var array<array-key, mixed> */
     protected array $serverCapabilities;
 
     public const LATEST_PROTOCOL_VERSION = '2024-11-05';
@@ -33,6 +39,9 @@ class McpHandler
 
     public const JSONRPC_VERSION = '2.0';
 
+    /**
+     * @param  array<array-key, array<array-key, mixed>>  $config
+     */
     public function __construct(
         protected Loop $loop,
         protected array $config = []
@@ -47,6 +56,11 @@ class McpHandler
         ];
     }
 
+    /**
+     * @param  array<array-key, mixed>  $clientInfo
+     * @param  array<array-key, mixed>  $capabilities
+     * @return array<array-key, mixed>
+     */
     public function initialize(array $clientInfo, array $capabilities, string $protocolVersion): array
     {
         if (! in_array($protocolVersion, self::SUPPORTED_PROTOCOL_VERSIONS)) {
@@ -73,7 +87,7 @@ class McpHandler
      *
      * @param  string  $template  URI template (RFC 6570)
      * @param  string  $uri  URI to match against the template
-     * @return array|null Variables extracted from the URI or null if no match
+     * @return array<array-key, mixed>|null Variables extracted from the URI or null if no match
      */
     protected function matchUriTemplate(string $template, string $uri): ?array
     {
@@ -96,6 +110,9 @@ class McpHandler
         return null;
     }
 
+    /**
+     * @return array{tools: array<array-key, mixed>}
+     */
     public function listTools(): array
     {
         $this->loop->setup();

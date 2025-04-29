@@ -2,12 +2,24 @@
 
 namespace Kirschbaum\Loop\Tools\Models\Concerns;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
 trait ProvidesModelColumns
 {
+    /**
+     * @return array<array-key, object{
+     *     name: string,
+     *     type: string,
+     *     nullable: bool,
+     *     has_default: bool,
+     *     default: mixed,
+     *     extra: string,
+     * }>
+     */
     protected function getTableColumns(string $modelClass): array
     {
+        /** @var Model $model */
         $model = new $modelClass;
         $table = $model->getTable();
 
