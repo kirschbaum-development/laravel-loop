@@ -69,7 +69,7 @@ use Kirschbaum\Loop\Loop;
 
 This package provides an MCP Server with your tools which you can make available to your MCP clients (Claude Code, Cursor, etc.).
 
-#### CLI/STDIO Interface
+### STDIO
 
 To connect Laravel Loop MCP server to Claude Code, for example, you can use the following command:
 
@@ -100,18 +100,7 @@ To add to Cursor, or any (most?) MCP clients with a config file:
 }
 ```
 
-### SSE
-
-Coming soon.
-
-## Roadmap
-
-- [ ] Add a chat component to the package, so you can use the tools inside the application without an MCP client.
-- [ ] Refine the existing tools
-- [ ] Add write capabilities to the existing tools
-- [ ] Add tests
-=======
-#### HTTP Server-Sent Events (SSE) Interface
+### Server-Sent Events (SSE)
 
 For web-based clients or HTTP-native tools, you can use the SSE endpoint:
 
@@ -142,3 +131,13 @@ data: {"jsonrpc":"2.0","id":1,"result":{}}
 ### Authentication
 
 To generate an API key, you must create a new Laravel Sanctum API token. This API key can be used with both the CLI and HTTP SSE interfaces.
+
+
+## Roadmap
+
+- [ ] Add a chat component to the package, so you can use the tools inside the application without an MCP client.
+- [ ] Refine the existing tools
+- [ ] Add write capabilities to the existing tools
+- [ ] Add tests
+
+=======

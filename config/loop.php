@@ -10,7 +10,6 @@ return [
     | provided by the Laravel Loop package.
     |
     */
-
     'sse' => [
         /*
         |--------------------------------------------------------------------------
@@ -33,63 +32,13 @@ return [
 
         /*
         |--------------------------------------------------------------------------
-        | Default Model
+        | SSE Heartbeat Interval
         |--------------------------------------------------------------------------
         |
-        | The default AI model to use for MCP requests.
+        | The interval in seconds at which to send heartbeat comments to keep
+        | the connection alive. Set to 0 to disable heartbeats.
         |
         */
-        'default_model' => env('LOOP_DEFAULT_MODEL', 'gpt-4o-mini'),
-
-        /*
-        |--------------------------------------------------------------------------
-        | Enable API Authentication
-        |--------------------------------------------------------------------------
-        |
-        | Whether to enable API key authentication for MCP requests.
-        |
-        */
-        'enable_auth' => env('LOOP_ENABLE_AUTH', true),
-
-        /*
-        |--------------------------------------------------------------------------
-        | Server-Sent Events (SSE) Configuration
-        |--------------------------------------------------------------------------
-        |
-        | Configuration for the HTTP SSE endpoint.
-        |
-        */
-        'sse' => [
-            /*
-            |--------------------------------------------------------------------------
-            | Enable SSE Endpoint
-            |--------------------------------------------------------------------------
-            |
-            | Whether to enable the SSE endpoint for MCP requests.
-            |
-            */
-            'enabled' => env('LOOP_SSE_ENABLED', true),
-
-            /*
-            |--------------------------------------------------------------------------
-            | SSE-specific Middleware
-            |--------------------------------------------------------------------------
-            |
-            | Additional middleware to apply only to the SSE endpoint.
-            | This can be useful for specific CORS or rate-limiting settings.
-            |
-            */
-            'middleware' => [],
-
-            /*
-            |--------------------------------------------------------------------------
-            | SSE Heartbeat Interval
-            |--------------------------------------------------------------------------
-            |
-            | The interval in seconds at which to send heartbeat comments to keep
-            | the connection alive. Set to 0 to disable heartbeats.
-            |
-            */
-            'heartbeat_interval' => env('LOOP_SSE_HEARTBEAT_INTERVAL', 30),
-        ],
+        'heartbeat_interval' => env('LOOP_SSE_HEARTBEAT_INTERVAL', 30),
+    ],
 ];
