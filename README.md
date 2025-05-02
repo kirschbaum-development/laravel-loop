@@ -112,9 +112,19 @@ To add to Cursor, or any (most?) MCP clients with a config file:
 }
 ```
 
-### SSE
+### Streamable HTTP Transport with SSE
 
-Coming soon.
+Laravel Loop supports the [streamable HTTP transport](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports) for the MCP protocol, which includes SSE capabilities for client-initiated requests (POST).
+
+To enable the Streamable HTTP transport, update your `.env` file:
+
+```bash
+LOOP_STREAMABLE_HTTP_ENABLED=true
+```
+
+This will expose an MCP endpoint at `/mcp` that supports both JSON-RPC and Server-Sent Events. The endpoint is protected by Laravel Sanctum by default.
+
+See [HTTP Streaming Documentation](docs/http-streaming.md) for more details on configuration, and usage.
 
 ## Roadmap
 

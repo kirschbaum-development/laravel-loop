@@ -2,11 +2,18 @@
 
 use Illuminate\Support\Facades\Route;
 use Kirschbaum\Loop\Http\Controllers\McpController;
-use Kirschbaum\Loop\Http\Middleware\SseEnabledMiddleware;
+use Kirschbaum\Loop\Http\Middleware\StreamableHttpEnabledMiddleware;
 
-Route::prefix('mcp')
-    ->middleware(array_merge([SseEnabledMiddleware::class], (array) config('loop.sse.middleware', [])))
-    ->group(function () {
-        Route::get('/', McpController::class);
-        Route::post('/', McpController::class);
-    });
+$path = config('loop.streamable_http.path', '/mcp');
+$streamableHttpEnabled = config('loop.streamable_http.enabled', false);
+
+if ($streamableHttpEnabled) {
+    Route::prefix($path)
+        ->middleware([
+            StreamableHttpEnabledMiddleware::class,
+            ...config('loop.sse.middleware', []),
+        ])
+        ->group(function () {
+            Route::post('/', McpController::class);
+        });
+}

@@ -10,18 +10,27 @@ return [
     | provided by the Laravel Loop package.
     |
     */
-
-    'sse' => [
+    'streamable_http' => [
         /*
         |--------------------------------------------------------------------------
-        | SSE Endpoint Enabled?
+        | Streamable HTTP Endpoint Enabled?
         |--------------------------------------------------------------------------
         */
-        'enabled' => env('LOOP_SSE_ENABLED', false),
+        'enabled' => env('LOOP_STREAMABLE_HTTP_ENABLED', false),
 
         /*
         |--------------------------------------------------------------------------
-        | SSE Endpoint Authentication Middleware
+        | Streamable HTTP Endpoint Path
+        |--------------------------------------------------------------------------
+        |
+        | The path where the MCP HTTP endpoint will be available.
+        |
+        */
+        'path' => env('LOOP_STREAMABLE_HTTP_PATH', '/mcp'),
+
+        /*
+        |--------------------------------------------------------------------------
+        | Streamable HTTP Endpoint Authentication Middleware
         |--------------------------------------------------------------------------
         |
         | The middleware used to authenticate MCP requests.

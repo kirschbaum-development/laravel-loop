@@ -37,7 +37,7 @@ class LaravelModelToolkit implements Toolkit
         $tools = new ToolCollection;
 
         foreach ($this->models as $model) {
-            $tools->merge($this->buildModelTools($model));
+            $tools = $tools->merge($this->buildModelTools($model));
         }
 
         return $tools;
