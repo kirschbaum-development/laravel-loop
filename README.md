@@ -2,6 +2,11 @@
 
 Laravel Loop is a powerful Model Context Protocol (MCP) server designed specifically for Laravel applications. It connects your Laravel application with AI assistants using MCP.
 
+Laravel Loop uses [Prism](https://github.com/prism-ai/prism) behind the scenes to build the tools.
+
+> [!IMPORTANT]
+> Laravel Loop is still in development and this is a beta version.
+
 ## What It Does
 
 Laravel Loop allows you to:
@@ -9,7 +14,7 @@ Laravel Loop allows you to:
 - Create and expose your own tools directly integrated with your Laravel application
 - Connect with MCP clients like Claude Code, Cursor, Windsurf, and more
 
-It also ships with some pre-built tools:
+It also ships with some pre-built tools (we are planning to add more and refine the existing ones):
 
 - Expose your data through Laravel Models using our pre-built toolkit (`LaravelModelToolkit`)
 - Expose your Filament Resources (`FilamentToolkit`)
@@ -72,16 +77,64 @@ Loop::tool(
 );
 ```
 
-You can also build your own tool classes by ...
+You can also build your own tool classes. Each tool must implement the `Tool` contract, and return a `Prism\Prism\Tool` instance in the `build` method.
 
 ```php
-use Kirschbaum\Loop\Loop;
+use Kirschbaum\Loop\Contracts\Tool;
 
+class HelloTool implements Tool
+{
+    use \Kirschbaum\Loop\Concerns\Makeable;
+
+    public function build(): \Prism\Prism\Tool
+    {
+        return app(\Prism\Prism\Tool::class)
+            ->as($this->getName())
+            ->for('Says hello to the user')
+            ->withStringParameter('name', 'The name of the user to say hello to.', required: true)
+            ->using(fn (string $name) => "Hello, $name!");
+    }
+
+    public function getName(): string
+    {
+        return 'hello';
+    }
+}
 ```
 
-## MCP (Model Context Protocol) Server
+If you want to provide multiple similar tools, you can build a toolkit which returns a collection of tools.
+
+```php
+use Kirschbaum\Loop\Collections\ToolCollection;
+use Kirschbaum\Loop\Contracts\Toolkit;
+
+class LaravelFactoriesToolkit implements Toolkit
+{
+    use \Kirschbaum\Loop\Concerns\Makeable;
+
+    public function getTools(): ToolCollection
+    {
+        return new ToolCollection([
+            HelloTool::make(),
+            GoodbyeTool::make(),
+        ]);
+    }
+}
+```
+
+***
+
+## Connecting to the MCP server
+
+The MCP protocol has two main ways to connect: STDIO and Streamable HTTP.
 
 ### STDIO
+
+To run the MCP server using STDIO, you must run the following command:
+
+```bash
+php artisan loop:mcp:start
+```
 
 To connect Laravel Loop MCP server to Claude Code, for example, you can use the following command:
 
@@ -95,9 +148,9 @@ claude mcp add laravel-loop-mcp php /your/full/path/to/laravel/artisan loop:mcp:
 claude mcp add laravel-loop-mcp php /your/full/path/to/laravel/artisan loop:mcp:start --debug
 ```
 
-To add to Cursor, or any (most?) MCP clients with a config file:
+To add to Cursor, or any MCP clients with a JSON config file:
 
-```bash
+```json
 {
   "mcpServers": {
     "laravel-loop-mcp": {
@@ -115,6 +168,9 @@ To add to Cursor, or any (most?) MCP clients with a config file:
 ### Streamable HTTP Transport with SSE
 
 Laravel Loop supports the [streamable HTTP transport](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports) for the MCP protocol, which includes SSE capabilities for client-initiated requests (POST).
+
+> [!IMPORTANT]
+> NOTE: The Streamable HTTP transport is new and not yet supported by all MCP clients.
 
 To enable the Streamable HTTP transport, update your `.env` file:
 
