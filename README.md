@@ -188,3 +188,15 @@ See [HTTP Streaming Documentation](docs/http-streaming.md) for more details on c
 - [ ] Refine the existing tools
 - [ ] Add write capabilities to the existing tools
 - [ ] Add tests
+
+## Security
+
+If you discover any security related issues, please email security@kirschbaumdevelopment.com instead of using the issue tracker.
+
+## Sponsorship
+
+Development of this package is sponsored by Kirschbaum Development Group, a developer driven company focused on problem solving, team building, and community. Learn more [about us](https://kirschbaumdevelopment.com?utm_source=github) or [join us](https://careers.kirschbaumdevelopment.com?utm_source=github)!
+
+## License
+
+The MIT License (MIT). Please see [License File](LICENSE) for more information.
