@@ -35,6 +35,11 @@ class CustomTool implements Tool
         return $tool->using($this->handler);
     }
 
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
     private function buildParameters(PrismTool $tool): void
     {
         foreach ($this->parameters as $name => $config) {
@@ -123,10 +128,5 @@ class CustomTool implements Tool
         }
 
         return $schemaArray;
-    }
-
-    public function getName(): string
-    {
-        return $this->name;
     }
 }

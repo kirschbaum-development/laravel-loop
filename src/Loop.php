@@ -25,6 +25,8 @@ class Loop
         $this->tools = new ToolCollection;
     }
 
+    public function setup(): void {}
+
     public function context(string $context): static
     {
         $this->context .= "\n\n".$context;
@@ -46,11 +48,6 @@ class Loop
         }
 
         return $this;
-    }
-
-    public function setup(): void
-    {
-        //
     }
 
     /**

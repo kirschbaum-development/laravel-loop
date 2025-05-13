@@ -12,6 +12,15 @@ use Prism\Prism\Tool;
 
 class McpHandler
 {
+    public const LATEST_PROTOCOL_VERSION = '2024-11-05';
+
+    public const SUPPORTED_PROTOCOL_VERSIONS = [
+        self::LATEST_PROTOCOL_VERSION,
+        '2024-10-07',
+    ];
+
+    public const JSONRPC_VERSION = '2.0';
+
     /** @var array<array-key, mixed> */
     protected array $resources = [];
 
@@ -29,15 +38,6 @@ class McpHandler
 
     /** @var array<array-key, mixed> */
     protected array $serverCapabilities;
-
-    public const LATEST_PROTOCOL_VERSION = '2024-11-05';
-
-    public const SUPPORTED_PROTOCOL_VERSIONS = [
-        self::LATEST_PROTOCOL_VERSION,
-        '2024-10-07',
-    ];
-
-    public const JSONRPC_VERSION = '2.0';
 
     /**
      * @param  array<array-key, array<array-key, mixed>>  $config
@@ -83,34 +83,6 @@ class McpHandler
     }
 
     /**
-     * Match a URI against a URI template and extract variables
-     *
-     * @param  string  $template  URI template (RFC 6570)
-     * @param  string  $uri  URI to match against the template
-     * @return array<array-key, mixed>|null Variables extracted from the URI or null if no match
-     */
-    protected function matchUriTemplate(string $template, string $uri): ?array
-    {
-        // Simple implementation for basic templates like "users://{userId}/profile"
-        $pattern = preg_quote($template, '/');
-        $pattern = preg_replace('/\\\\{([^}]+)\\\\}/', '(?P<$1>[^/]+)', $pattern);
-        $pattern = '/^'.$pattern.'$/';
-
-        if (preg_match($pattern, $uri, $matches)) {
-            $variables = [];
-            foreach ($matches as $key => $value) {
-                if (is_string($key)) {
-                    $variables[$key] = $value;
-                }
-            }
-
-            return $variables;
-        }
-
-        return null;
-    }
-
-    /**
      * @return array{tools: array<array-key, mixed>}
      */
     public function listTools(): array
@@ -142,13 +114,6 @@ class McpHandler
         return [
             $key => [],
         ];
-    }
-
-    protected function parametersToMcpInputSchema(array $parameters): array
-    {
-        return array_map(function (array $parameter) {
-            return $parameter['name'];
-        }, $parameters);
     }
 
     public function callTool(string $name, array $arguments): array
@@ -236,15 +201,6 @@ class McpHandler
         return $this->successResponse($id, $message);
     }
 
-    protected function successResponse($id, $message): array
-    {
-        return [
-            'jsonrpc' => '2.0',
-            'id' => $id,
-            'result' => $message,
-        ];
-    }
-
     public function formatErrorResponse($id, int $code, string $message, $data = null): array
     {
         $response = [
@@ -324,5 +280,50 @@ class McpHandler
 
             throw new LoopMcpException($e->getMessage());
         }
+    }
+
+    /**
+     * Match a URI against a URI template and extract variables
+     *
+     * @param  string  $template  URI template (RFC 6570)
+     * @param  string  $uri  URI to match against the template
+     * @return array<array-key, mixed>|null Variables extracted from the URI or null if no match
+     */
+    protected function matchUriTemplate(string $template, string $uri): ?array
+    {
+        // Simple implementation for basic templates like "users://{userId}/profile"
+        $pattern = preg_quote($template, '/');
+        $pattern = preg_replace('/\\\\{([^}]+)\\\\}/', '(?P<$1>[^/]+)', $pattern);
+        $pattern = '/^'.$pattern.'$/';
+
+        if (preg_match($pattern, $uri, $matches)) {
+            $variables = [];
+
+            foreach ($matches as $key => $value) {
+                if (is_string($key)) {
+                    $variables[$key] = $value;
+                }
+            }
+
+            return $variables;
+        }
+
+        return null;
+    }
+
+    protected function parametersToMcpInputSchema(array $parameters): array
+    {
+        return array_map(function (array $parameter) {
+            return $parameter['name'];
+        }, $parameters);
+    }
+
+    protected function successResponse($id, $message): array
+    {
+        return [
+            'jsonrpc' => '2.0',
+            'id' => $id,
+            'result' => $message,
+        ];
     }
 }

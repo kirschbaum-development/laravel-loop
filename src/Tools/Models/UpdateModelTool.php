@@ -54,12 +54,17 @@ class UpdateModelTool implements Tool
                 switch ($type) {
                     case 'number':
                         $properties[] = new NumberSchema($attribute, "The {$attribute} of the {$this->label}");
+
                         break;
+
                     case 'boolean':
                         $properties[] = new BooleanSchema($attribute, "The {$attribute} of the {$this->label}");
+
                         break;
+
                     default:
                         $properties[] = new StringSchema($attribute, "The {$attribute} of the {$this->label}");
+
                         break;
                 }
             } else {

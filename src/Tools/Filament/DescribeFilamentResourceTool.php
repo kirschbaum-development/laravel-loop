@@ -276,6 +276,7 @@ class DescribeFilamentResourceTool implements Tool
             // Condition is implicit (true/false/all)
         } elseif ($filter instanceof SelectFilter) {
             $baseInfo['optionsSource'] = 'Dynamic/Callable'; // Getting exact source is complex
+
             // Try to get options if they are simple array
             if (method_exists($filter, 'getOptions') && is_array($options = $filter->getOptions())) {
                 $baseInfo['optionsSource'] = $options;

@@ -84,6 +84,7 @@ class LoopMcpServerStartCommand extends Command
                 info('Received signal: '.$signal.'. Shutting down...');
                 $this->info('Received signal: '.$signal.'. Shutting down...');
                 $loop->stop();
+
                 exit(0);
             });
 
@@ -91,6 +92,7 @@ class LoopMcpServerStartCommand extends Command
                 info('Received signal: '.$signal.'. Shutting down...');
                 $this->info('Received signal: '.$signal.'. Shutting down...');
                 $loop->stop();
+
                 exit(0);
             });
         } else {

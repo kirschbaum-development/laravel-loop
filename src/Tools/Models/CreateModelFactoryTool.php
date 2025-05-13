@@ -17,17 +17,6 @@ class CreateModelFactoryTool implements Tool
 {
     use Makeable;
 
-    protected function getFactoryPath(): string
-    {
-        // Allow overriding via config or constructor later if needed
-        return database_path('factories');
-    }
-
-    protected function getFactoryNamespace(): string
-    {
-        return 'Database\Factories\\';
-    }
-
     // Placeholder for the next tool
     public function build(): PrismTool
     {
@@ -91,7 +80,6 @@ class CreateModelFactoryTool implements Tool
                         basename(str_replace('\\', '/', $factoryClass)),
                         "IDs: [{$ids}]"
                     );
-
                 } catch (InvalidArgumentException $e) {
                     Log::error("Factory creation error for {$factoryClass}: ".$e->getMessage());
 
@@ -109,6 +97,17 @@ class CreateModelFactoryTool implements Tool
         return 'laravel_factories_create';
     }
 
+    protected function getFactoryPath(): string
+    {
+        // Allow overriding via config or constructor later if needed
+        return database_path('factories');
+    }
+
+    protected function getFactoryNamespace(): string
+    {
+        return 'Database\Factories\\';
+    }
+
     protected function findFactoryClass(string $identifier): ?string
     {
         $namespace = $this->getFactoryNamespace();
@@ -120,12 +119,14 @@ class CreateModelFactoryTool implements Tool
 
         // Assume it's a short name and prepend namespace
         $potentialClass = $namespace.Str::finish($identifier, 'Factory');
+
         if (class_exists($potentialClass) && is_subclass_of($potentialClass, Factory::class)) {
             return $potentialClass;
         }
 
         // Try without appending Factory suffix if already present
         $potentialClass = $namespace.$identifier;
+
         if (class_exists($potentialClass) && is_subclass_of($potentialClass, Factory::class)) {
             return $potentialClass;
         }

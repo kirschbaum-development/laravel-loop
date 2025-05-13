@@ -94,7 +94,6 @@ class GetFilamentResourceDataTool implements Tool
                     });
 
                     return json_encode($outputData);
-
                 } catch (Exception $e) {
                     Log::error("[Laravel Loop] Error processing resource data: {$e->getMessage()}");
                     Log::debug('[Laravel Loop] Error trace: '.$e->getTraceAsString());

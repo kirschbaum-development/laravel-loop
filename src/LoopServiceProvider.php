@@ -3,6 +3,7 @@
 namespace Kirschbaum\Loop;
 
 use Kirschbaum\Loop\Commands\LoopMcpServerStartCommand;
+use Kirschbaum\Loop\Services\SseService;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -33,6 +34,10 @@ class LoopServiceProvider extends PackageServiceProvider
             $loop->setup();
 
             return $loop;
+        });
+
+        $this->app->singleton(SseService::class, function ($app) {
+            return new SseService;
         });
     }
 }

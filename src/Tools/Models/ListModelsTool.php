@@ -66,6 +66,7 @@ class ListModelsTool implements Tool
                             $filterValue = $value['value'];
 
                             $validOperators = ['=', '>', '<', '>=', '<='];
+
                             if (! in_array($operator, $validOperators)) {
                                 $operator = '=';
                             }

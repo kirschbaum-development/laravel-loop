@@ -43,6 +43,7 @@ class DescribeModelFactoryTool implements Tool
 
                     try {
                         $reflection = new ReflectionClass($className);
+
                         if (! $reflection->isSubclassOf(Factory::class) || $reflection->isAbstract()) {
                             continue;
                         }
@@ -85,10 +86,12 @@ class DescribeModelFactoryTool implements Tool
 
                 // Format the output
                 $output = "Available Laravel Factories:\n\n";
+
                 foreach ($factoriesInfo as $factoryClass => $info) {
                     $shortName = Arr::last(explode('\\', $factoryClass));
                     $output .= "- Factory: {$shortName} ({$factoryClass})\n";
                     $output .= "  Model: {$info['model']}\n";
+
                     if (! empty($info['methods'])) {
                         $output .= "  Available States/Methods: \n    - ".implode("\n    - ", $info['methods'])."\n";
                     } else {
