@@ -11,7 +11,7 @@ if ($streamableHttpEnabled) {
     Route::prefix($path)
         ->middleware([
             StreamableHttpEnabledMiddleware::class,
-            ...config('loop.sse.middleware', []),
+            ...config('loop.streamable_http.middleware', []),
         ])
         ->group(function () {
             Route::post('/', McpController::class);
