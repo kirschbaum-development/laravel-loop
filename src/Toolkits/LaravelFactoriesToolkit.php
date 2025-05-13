@@ -2,9 +2,9 @@
 
 namespace Kirschbaum\Loop\Toolkits;
 
-use Kirschbaum\Loop\Collections\ToolCollection;
 use Kirschbaum\Loop\Concerns\Makeable;
 use Kirschbaum\Loop\Contracts\Toolkit;
+use Kirschbaum\Loop\Collections\ToolCollection;
 use Kirschbaum\Loop\Tools\Models\CreateModelFactoryTool;
 use Kirschbaum\Loop\Tools\Models\DescribeModelFactoryTool;
 

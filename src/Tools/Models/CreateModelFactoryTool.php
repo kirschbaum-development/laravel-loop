@@ -2,31 +2,20 @@
 
 namespace Kirschbaum\Loop\Tools\Models;
 
-use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Log;
+use Throwable;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
-use Kirschbaum\Loop\Concerns\Makeable;
+use Illuminate\Support\Collection;
+use Prism\Prism\Tool as PrismTool;
+use Illuminate\Support\Facades\Log;
 use Kirschbaum\Loop\Contracts\Tool;
 use Prism\Prism\Schema\StringSchema;
-use Prism\Prism\Tool as PrismTool;
-use Throwable;
+use Kirschbaum\Loop\Concerns\Makeable;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 class CreateModelFactoryTool implements Tool
 {
     use Makeable;
-
-    protected function getFactoryPath(): string
-    {
-        // Allow overriding via config or constructor later if needed
-        return database_path('factories');
-    }
-
-    protected function getFactoryNamespace(): string
-    {
-        return 'Database\Factories\\';
-    }
 
     // Placeholder for the next tool
     public function build(): PrismTool
@@ -91,15 +80,14 @@ class CreateModelFactoryTool implements Tool
                         basename(str_replace('\\', '/', $factoryClass)),
                         "IDs: [{$ids}]"
                     );
-
                 } catch (InvalidArgumentException $e) {
-                    Log::error("Factory creation error for {$factoryClass}: ".$e->getMessage());
+                    Log::error("Factory creation error for {$factoryClass}: " . $e->getMessage());
 
-                    return "Error: Invalid arguments provided for factory {$factoryClass}. Check attribute names and types. Details: ".$e->getMessage();
+                    return "Error: Invalid arguments provided for factory {$factoryClass}. Check attribute names and types. Details: " . $e->getMessage();
                 } catch (Throwable $e) {
-                    Log::error("Factory creation failed for {$factoryClass}: ".$e->getMessage(), ['exception' => $e]);
+                    Log::error("Factory creation failed for {$factoryClass}: " . $e->getMessage(), ['exception' => $e]);
 
-                    return "Error: Failed to {$action} models using factory {$factoryClass}. Details: ".$e->getMessage();
+                    return "Error: Failed to {$action} models using factory {$factoryClass}. Details: " . $e->getMessage();
                 }
             });
     }
@@ -107,6 +95,17 @@ class CreateModelFactoryTool implements Tool
     public function getName(): string
     {
         return 'laravel_factories_create';
+    }
+
+    protected function getFactoryPath(): string
+    {
+        // Allow overriding via config or constructor later if needed
+        return database_path('factories');
+    }
+
+    protected function getFactoryNamespace(): string
+    {
+        return 'Database\Factories\\';
     }
 
     protected function findFactoryClass(string $identifier): ?string
@@ -119,13 +118,15 @@ class CreateModelFactoryTool implements Tool
         }
 
         // Assume it's a short name and prepend namespace
-        $potentialClass = $namespace.Str::finish($identifier, 'Factory');
+        $potentialClass = $namespace . Str::finish($identifier, 'Factory');
+
         if (class_exists($potentialClass) && is_subclass_of($potentialClass, Factory::class)) {
             return $potentialClass;
         }
 
         // Try without appending Factory suffix if already present
-        $potentialClass = $namespace.$identifier;
+        $potentialClass = $namespace . $identifier;
+
         if (class_exists($potentialClass) && is_subclass_of($potentialClass, Factory::class)) {
             return $potentialClass;
         }

@@ -2,11 +2,11 @@
 
 namespace Kirschbaum\Loop\Tools\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Kirschbaum\Loop\Concerns\Makeable;
+use Prism\Prism\Tool as PrismTool;
 use Kirschbaum\Loop\Contracts\Tool;
 use Prism\Prism\Schema\NumberSchema;
-use Prism\Prism\Tool as PrismTool;
+use Kirschbaum\Loop\Concerns\Makeable;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * @method static self make(string $modelClass, string $label)
@@ -19,7 +19,8 @@ class DeleteModelTool implements Tool
         /** @param  class-string<Model> $modelClass */
         private string $modelClass,
         private string $label,
-    ) {}
+    ) {
+    }
 
     public function build(): PrismTool
     {
@@ -56,7 +57,7 @@ class DeleteModelTool implements Tool
 
                     return "Successfully deleted {$this->label} with ID: {$id}";
                 } catch (\Exception $e) {
-                    return "Failed to delete {$this->label}: ".$e->getMessage();
+                    return "Failed to delete {$this->label}: " . $e->getMessage();
                 }
             });
     }
@@ -65,6 +66,6 @@ class DeleteModelTool implements Tool
     {
         $modelName = class_basename($this->modelClass);
 
-        return strtolower($modelName).'_delete_model';
+        return strtolower($modelName) . '_delete_model';
     }
 }

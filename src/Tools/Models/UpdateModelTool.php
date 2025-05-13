@@ -2,15 +2,15 @@
 
 namespace Kirschbaum\Loop\Tools\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Kirschbaum\Loop\Concerns\Makeable;
+use Prism\Prism\Tool as PrismTool;
 use Kirschbaum\Loop\Contracts\Tool;
-use Kirschbaum\Loop\Tools\Models\Concerns\MapsDatabaseTypeToParameterType;
-use Kirschbaum\Loop\Tools\Models\Concerns\ProvidesModelColumns;
-use Prism\Prism\Schema\BooleanSchema;
 use Prism\Prism\Schema\NumberSchema;
 use Prism\Prism\Schema\StringSchema;
-use Prism\Prism\Tool as PrismTool;
+use Prism\Prism\Schema\BooleanSchema;
+use Kirschbaum\Loop\Concerns\Makeable;
+use Illuminate\Database\Eloquent\Model;
+use Kirschbaum\Loop\Tools\Models\Concerns\ProvidesModelColumns;
+use Kirschbaum\Loop\Tools\Models\Concerns\MapsDatabaseTypeToParameterType;
 
 /**
  * @method static self make(string $modelClass, string $label)
@@ -25,7 +25,8 @@ class UpdateModelTool implements Tool
         /** @param  class-string<Model> $modelClass */
         private string $modelClass,
         private string $label,
-    ) {}
+    ) {
+    }
 
     public function build(): PrismTool
     {
@@ -54,12 +55,17 @@ class UpdateModelTool implements Tool
                 switch ($type) {
                     case 'number':
                         $properties[] = new NumberSchema($attribute, "The {$attribute} of the {$this->label}");
+
                         break;
+
                     case 'boolean':
                         $properties[] = new BooleanSchema($attribute, "The {$attribute} of the {$this->label}");
+
                         break;
+
                     default:
                         $properties[] = new StringSchema($attribute, "The {$attribute} of the {$this->label}");
+
                         break;
                 }
             } else {
@@ -109,7 +115,7 @@ class UpdateModelTool implements Tool
                         return "No valid fields provided to update {$this->label} with ID: {$id}";
                     }
                 } catch (\Exception $e) {
-                    return "Failed to update {$this->label}: ".$e->getMessage();
+                    return "Failed to update {$this->label}: " . $e->getMessage();
                 }
             });
     }
@@ -118,6 +124,6 @@ class UpdateModelTool implements Tool
     {
         $modelName = class_basename($this->modelClass);
 
-        return strtolower($modelName).'_update_model';
+        return strtolower($modelName) . '_update_model';
     }
 }

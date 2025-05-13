@@ -2,12 +2,12 @@
 
 namespace Kirschbaum\Loop\Http\Controllers;
 
-use Illuminate\Http\JsonResponse;
+use Kirschbaum\Loop\Loop;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Cache;
 use Kirschbaum\Loop\Http\Requests\AskRequest;
-use Kirschbaum\Loop\Loop;
 
 class LoopController extends Controller
 {
@@ -94,16 +94,6 @@ class LoopController extends Controller
     }
 
     /**
-     * Store a message in the cache
-     */
-    protected function storeMessageInCache(array $message): void
-    {
-        $messages = Cache::get($this->cacheKey, []);
-        $messages[] = $message;
-        Cache::put($this->cacheKey, $messages, 3600); // Store for 1 hour
-    }
-
-    /**
      * Get all messages in the conversation
      */
     public function getMessages(): JsonResponse
@@ -131,6 +121,16 @@ class LoopController extends Controller
             'success' => true,
             'message' => 'Messages cleared successfully',
         ]);
+    }
+
+    /**
+     * Store a message in the cache
+     */
+    protected function storeMessageInCache(array $message): void
+    {
+        $messages = Cache::get($this->cacheKey, []);
+        $messages[] = $message;
+        Cache::put($this->cacheKey, $messages, 3600); // Store for 1 hour
     }
 
     /**

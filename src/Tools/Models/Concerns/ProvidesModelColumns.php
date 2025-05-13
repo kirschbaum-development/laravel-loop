@@ -2,8 +2,8 @@
 
 namespace Kirschbaum\Loop\Tools\Models\Concerns;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Model;
 
 trait ProvidesModelColumns
 {

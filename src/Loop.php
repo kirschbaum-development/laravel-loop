@@ -2,17 +2,17 @@
 
 namespace Kirschbaum\Loop;
 
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Auth;
-use Kirschbaum\Loop\Collections\ToolCollection;
-use Kirschbaum\Loop\Contracts\Tool;
-use Kirschbaum\Loop\Contracts\Toolkit;
-use Prism\Prism\Enums\Provider;
 use Prism\Prism\Prism;
 use Prism\Prism\Text\Response;
+use Prism\Prism\Enums\Provider;
+use Illuminate\Support\Collection;
 use Prism\Prism\Tool as PrismTool;
-use Prism\Prism\ValueObjects\Messages\AssistantMessage;
+use Kirschbaum\Loop\Contracts\Tool;
+use Illuminate\Support\Facades\Auth;
+use Kirschbaum\Loop\Contracts\Toolkit;
+use Kirschbaum\Loop\Collections\ToolCollection;
 use Prism\Prism\ValueObjects\Messages\UserMessage;
+use Prism\Prism\ValueObjects\Messages\AssistantMessage;
 
 class Loop
 {
@@ -25,9 +25,13 @@ class Loop
         $this->tools = new ToolCollection;
     }
 
+    public function setup(): void
+    {
+    }
+
     public function context(string $context): static
     {
-        $this->context .= "\n\n".$context;
+        $this->context .= "\n\n" . $context;
 
         return $this;
     }
@@ -46,11 +50,6 @@ class Loop
         }
 
         return $this;
-    }
-
-    public function setup(): void
-    {
-        //
     }
 
     /**

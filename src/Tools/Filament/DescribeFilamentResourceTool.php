@@ -3,30 +3,30 @@
 namespace Kirschbaum\Loop\Tools\Filament;
 
 use Exception;
-use Filament\Forms\Components\Component;
-use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\Fieldset;
-use Filament\Forms\Components\Grid;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
+use Filament\Tables\Table;
 use Filament\Resources\Resource;
-use Filament\Support\Contracts\TranslatableContentDriver;
+use Prism\Prism\Tool as PrismTool;
+use Filament\Forms\Components\Grid;
 use Filament\Tables\Actions\Action;
-use Filament\Tables\Actions\BulkAction;
 use Filament\Tables\Columns\Column;
+use Illuminate\Support\Facades\Log;
+use Kirschbaum\Loop\Contracts\Tool;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Contracts\HasForms;
+use Kirschbaum\Loop\Concerns\Makeable;
+use Filament\Forms\Components\Fieldset;
+use Filament\Tables\Actions\BulkAction;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\BaseFilter;
+use Filament\Forms\Components\Component;
+use Filament\Forms\Components\TextInput;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
-use Filament\Tables\Table;
-use Illuminate\Support\Facades\Log;
-use Kirschbaum\Loop\Concerns\Makeable;
-use Kirschbaum\Loop\Contracts\Tool;
-use Kirschbaum\Loop\Tools\Filament\Concerns\ProvidesFilamentResourceInstance;
 use Livewire\Component as LivewireComponent;
-use Prism\Prism\Tool as PrismTool;
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Support\Contracts\TranslatableContentDriver;
+use Kirschbaum\Loop\Tools\Filament\Concerns\ProvidesFilamentResourceInstance;
 
 class DescribeFilamentResourceTool implements Tool
 {
@@ -67,8 +67,7 @@ class DescribeFilamentResourceTool implements Tool
 
     protected function extractFormSchema(Resource $resource): array
     {
-        $livewireComponent = new class extends LivewireComponent implements HasForms
-        {
+        $livewireComponent = new class extends LivewireComponent implements HasForms {
             use \Filament\Forms\Concerns\InteractsWithForms;
         };
 
@@ -126,8 +125,7 @@ class DescribeFilamentResourceTool implements Tool
     protected function extractTableSchema(Resource $resource): array
     {
         try {
-            $livewireComponent = new class extends LivewireComponent implements HasTable
-            {
+            $livewireComponent = new class extends LivewireComponent implements HasTable {
                 use \Filament\Tables\Concerns\InteractsWithTable;
 
                 public function makeFilamentTranslatableContentDriver(): ?TranslatableContentDriver
@@ -276,6 +274,7 @@ class DescribeFilamentResourceTool implements Tool
             // Condition is implicit (true/false/all)
         } elseif ($filter instanceof SelectFilter) {
             $baseInfo['optionsSource'] = 'Dynamic/Callable'; // Getting exact source is complex
+
             // Try to get options if they are simple array
             if (method_exists($filter, 'getOptions') && is_array($options = $filter->getOptions())) {
                 $baseInfo['optionsSource'] = $options;

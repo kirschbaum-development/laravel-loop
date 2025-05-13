@@ -8,6 +8,8 @@ class SseService
 {
     /**
      * Create a streamed SSE response for a POST request.
+     *
+     * @param  array<array-key, mixed>  $messages  JSON-RPC messages from the client
      */
     public function createPostSseResponse(array $messages, callable $processor): StreamedResponse
     {
@@ -51,6 +53,8 @@ class SseService
 
     /**
      * Format a JSON-RPC message as an SSE event.
+     *
+     * @param  array<array-key, mixed>  $message  JSON-RPC message
      */
     public function formatSseEvent(array $message, ?string $eventId = null): string
     {

@@ -5,9 +5,9 @@ namespace Kirschbaum\Loop\Tools\Filament;
 use Filament\Facades\Filament;
 use Filament\Resources\Resource;
 use Illuminate\Support\Collection;
-use Kirschbaum\Loop\Concerns\Makeable;
-use Kirschbaum\Loop\Contracts\Tool;
 use Prism\Prism\Tool as PrismTool;
+use Kirschbaum\Loop\Contracts\Tool;
+use Kirschbaum\Loop\Concerns\Makeable;
 
 /**
  * @method static static make(array $resources = [])
@@ -19,7 +19,9 @@ class ListFilamentResourcesTool implements Tool
     /**
      * @param  resource[]  $resources
      */
-    public function __construct(private array $resources = []) {}
+    public function __construct(private array $resources = [])
+    {
+    }
 
     public function build(): PrismTool
     {

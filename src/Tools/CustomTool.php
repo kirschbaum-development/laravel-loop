@@ -3,14 +3,14 @@
 namespace Kirschbaum\Loop\Tools;
 
 use Closure;
-use Kirschbaum\Loop\Concerns\Makeable;
-use Kirschbaum\Loop\Contracts\Tool;
 use Prism\Prism\Contracts\Schema;
-use Prism\Prism\Schema\BooleanSchema;
+use Prism\Prism\Tool as PrismTool;
+use Kirschbaum\Loop\Contracts\Tool;
 use Prism\Prism\Schema\NumberSchema;
 use Prism\Prism\Schema\ObjectSchema;
 use Prism\Prism\Schema\StringSchema;
-use Prism\Prism\Tool as PrismTool;
+use Prism\Prism\Schema\BooleanSchema;
+use Kirschbaum\Loop\Concerns\Makeable;
 
 class CustomTool implements Tool
 {
@@ -22,7 +22,8 @@ class CustomTool implements Tool
         /** @var array<string, array{type?: string, description?: string, required?: bool}> */
         public readonly array $parameters,
         public readonly Closure $handler,
-    ) {}
+    ) {
+    }
 
     public function build(): PrismTool
     {
@@ -33,6 +34,11 @@ class CustomTool implements Tool
         $this->buildParameters($tool);
 
         return $tool->using($this->handler);
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
     }
 
     private function buildParameters(PrismTool $tool): void
@@ -86,6 +92,7 @@ class CustomTool implements Tool
 
     /**
      * @param  array<string, array<string, mixed>>  $parameters
+     *
      * @return array<Schema>
      */
     private function buildSchemaArray(array $parameters): array
@@ -123,10 +130,5 @@ class CustomTool implements Tool
         }
 
         return $schemaArray;
-    }
-
-    public function getName(): string
-    {
-        return $this->name;
     }
 }

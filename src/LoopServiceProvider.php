@@ -2,10 +2,10 @@
 
 namespace Kirschbaum\Loop;
 
-use Kirschbaum\Loop\Commands\LoopMcpServerStartCommand;
-use Kirschbaum\Loop\Services\SseService;
 use Spatie\LaravelPackageTools\Package;
+use Kirschbaum\Loop\Services\SseService;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Kirschbaum\Loop\Commands\LoopMcpServerStartCommand;
 
 class LoopServiceProvider extends PackageServiceProvider
 {

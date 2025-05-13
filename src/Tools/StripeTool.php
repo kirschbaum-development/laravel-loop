@@ -3,11 +3,11 @@
 namespace Kirschbaum\Loop\Tools;
 
 use Exception;
-use Kirschbaum\Loop\Concerns\Makeable;
-use Kirschbaum\Loop\Contracts\Tool;
-use Prism\Prism\Tool as PrismTool;
-use Stripe\Exception\ApiErrorException;
 use Stripe\StripeClient;
+use Prism\Prism\Tool as PrismTool;
+use Kirschbaum\Loop\Contracts\Tool;
+use Kirschbaum\Loop\Concerns\Makeable;
+use Stripe\Exception\ApiErrorException;
 
 /**
  * @method static make(string $apiKey = null, string $description = null)
@@ -75,6 +75,7 @@ class StripeTool implements Tool
                         if (stripos($effectiveContentType, 'application/json') !== false) {
                             if (is_string($body) && str_starts_with(trim($body), '{')) {
                                 $bodyData = json_decode($body, true);
+
                                 // If JSON decoding fails, pass the raw string body
                                 if (json_last_error() !== JSON_ERROR_NONE) {
                                     $bodyData = $body;
@@ -113,6 +114,7 @@ class StripeTool implements Tool
                             } else {
                                 // Get specific resource (e.g., /customers/{id})
                                 $id = $pathParts[1] ?? null;
+
                                 if (! $id) {
                                     return 'Error: Resource ID required for GET request';
                                 }
@@ -120,13 +122,15 @@ class StripeTool implements Tool
                                 // Check if this is a nested resource
                                 if (count($pathParts) > 2) {
                                     $nestedResource = $pathParts[2] ?? null;
+
                                     if ($nestedResource) {
                                         // e.g., /customers/{id}/sources
                                         $resource = $stripe->{$resourceName}->retrieve($id);
+
                                         if (method_exists($resource, $nestedResource)) {
                                             $response = $resource->{$nestedResource}->all($queryData);
                                         } else {
-                                            return "Error: Nested resource '$nestedResource' not found for resource '$resourceName'";
+                                            return "Error: Nested resource '{$nestedResource}' not found for resource '{$resourceName}'";
                                         }
                                     } else {
                                         $response = $stripe->{$resourceName}->retrieve($id, $queryData);
@@ -135,6 +139,7 @@ class StripeTool implements Tool
                                     $response = $stripe->{$resourceName}->retrieve($id, $queryData);
                                 }
                             }
+
                             break;
 
                         case 'POST':
@@ -144,6 +149,7 @@ class StripeTool implements Tool
                             } else {
                                 // Update specific resource or call a resource method
                                 $id = $pathParts[1] ?? null;
+
                                 if (! $id) {
                                     return 'Error: Resource ID required for POST request';
                                 }
@@ -151,6 +157,7 @@ class StripeTool implements Tool
                                 // Check if this is a nested resource or action
                                 if (count($pathParts) > 2) {
                                     $action = $pathParts[2] ?? null;
+
                                     if ($action) {
                                         // Try to call the action method on the resource's API
                                         if (method_exists($stripe->{$resourceName}, $action)) {
@@ -158,10 +165,11 @@ class StripeTool implements Tool
                                         } else {
                                             // Retrieve the resource and try to call the action on the object
                                             $resource = $stripe->{$resourceName}->retrieve($id);
+
                                             if (method_exists($resource, $action)) {
                                                 $response = $resource->{$action}($bodyData ?? []);
                                             } else {
-                                                return "Error: Action '$action' not found for resource '$resourceName'";
+                                                return "Error: Action '{$action}' not found for resource '{$resourceName}'";
                                             }
                                         }
                                     } else {
@@ -171,6 +179,7 @@ class StripeTool implements Tool
                                     $response = $stripe->{$resourceName}->update($id, $bodyData ?? []);
                                 }
                             }
+
                             break;
 
                         case 'DELETE':
@@ -179,15 +188,17 @@ class StripeTool implements Tool
                             }
 
                             $id = $pathParts[1] ?? null;
+
                             if (! $id) {
                                 return 'Error: Resource ID required for DELETE request';
                             }
 
                             $response = $stripe->{$resourceName}->delete($id, $queryData);
+
                             break;
 
                         default:
-                            return "Error: Unsupported HTTP method: $method";
+                            return "Error: Unsupported HTTP method: {$method}";
                     }
 
                     // Convert response to JSON string
@@ -200,7 +211,7 @@ class StripeTool implements Tool
                         $errorDetails = json_encode($e->getJsonBody());
                     }
 
-                    return "Error making Stripe API call to '$method $path': ".$errorDetails;
+                    return "Error making Stripe API call to '{$method} {$path}': " . $errorDetails;
                 }
             });
     }
