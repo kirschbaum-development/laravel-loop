@@ -3,11 +3,11 @@
 namespace Kirschbaum\Loop\Tools;
 
 use Exception;
-use Stripe\StripeClient;
-use Prism\Prism\Tool as PrismTool;
-use Kirschbaum\Loop\Contracts\Tool;
 use Kirschbaum\Loop\Concerns\Makeable;
+use Kirschbaum\Loop\Contracts\Tool;
+use Prism\Prism\Tool as PrismTool;
 use Stripe\Exception\ApiErrorException;
+use Stripe\StripeClient;
 
 /**
  * @method static make(string $apiKey = null, string $description = null)
@@ -211,7 +211,7 @@ class StripeTool implements Tool
                         $errorDetails = json_encode($e->getJsonBody());
                     }
 
-                    return "Error making Stripe API call to '{$method} {$path}': " . $errorDetails;
+                    return "Error making Stripe API call to '{$method} {$path}': ".$errorDetails;
                 }
             });
     }

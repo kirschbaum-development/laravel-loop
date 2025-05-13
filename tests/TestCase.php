@@ -1,16 +1,16 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Tests;
 
 use Closure;
-use Mockery\MockInterface;
-use Illuminate\Support\Facades\Http;
-use Orchestra\Testbench\TestCase as Orchestra;
-use Orchestra\Testbench\Concerns\WithWorkbench;
-use Orchestra\Testbench\Attributes\WithMigration;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\Http;
+use Mockery\MockInterface;
+use Orchestra\Testbench\Attributes\WithMigration;
+use Orchestra\Testbench\Concerns\WithWorkbench;
+use Orchestra\Testbench\TestCase as Orchestra;
 
 #[WithMigration]
 class TestCase extends Orchestra

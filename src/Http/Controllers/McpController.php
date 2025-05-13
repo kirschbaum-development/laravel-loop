@@ -2,19 +2,17 @@
 
 namespace Kirschbaum\Loop\Http\Controllers;
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Kirschbaum\Loop\McpHandler;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
+use Kirschbaum\Loop\McpHandler;
 use Kirschbaum\Loop\Services\SseService;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class McpController extends Controller
 {
-    public function __construct(protected McpHandler $mcpHandler, protected SseService $sseService)
-    {
-    }
+    public function __construct(protected McpHandler $mcpHandler, protected SseService $sseService) {}
 
     /**
      * Handle MCP requests.
@@ -59,7 +57,8 @@ class McpController extends Controller
      *
      * @param  array<array-key, mixed>  $messages  JSON-RPC messages from the client
      */
-    protected function handlePostSseResponse(array $messages): StreamedResponse {
+    protected function handlePostSseResponse(array $messages): StreamedResponse
+    {
         $response = $this->sseService->createPostSseResponse(
             $messages,
             fn ($message) => $this->mcpHandler->handle($message),
@@ -83,10 +82,6 @@ class McpController extends Controller
     /**
      * Handle GET requests for backwards compatibility with older clients
      * expecting an SSE stream for server-initiated messages.
-     *
-     * @param \Illuminate\Http\Request $request
-     *
-     * @return \Symfony\Component\HttpFoundation\StreamedResponse|\Illuminate\Http\JsonResponse|\Illuminate\Http\Response
      */
     protected function handleGetRequest(Request $request): StreamedResponse|JsonResponse|Response
     {
@@ -115,7 +110,7 @@ class McpController extends Controller
             // The event name 'endpoint' is a placeholder; adjust if old clients expect a different name.
             echo 'event: endpoint
 ';
-            echo 'data: ' . json_encode($endpointEventData) . '
+            echo 'data: '.json_encode($endpointEventData).'
 
 ';
             flush();
@@ -172,8 +167,8 @@ class McpController extends Controller
     /**
      * Check if the client prefers JSON over SSE.
      *
-     * @param mixed $acceptsJson
-     * @param mixed $acceptsEventStream
+     * @param  mixed  $acceptsJson
+     * @param  mixed  $acceptsEventStream
      */
     protected function clientPrefersJson($acceptsJson, $acceptsEventStream): bool
     {
@@ -183,7 +178,7 @@ class McpController extends Controller
     /**
      * Check if an item is a JSON-RPC request.
      *
-     * @param mixed $item
+     * @param  mixed  $item
      */
     protected function isJsonRpcRequest($item): bool
     {

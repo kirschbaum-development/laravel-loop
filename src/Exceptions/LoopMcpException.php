@@ -4,6 +4,4 @@ namespace Kirschbaum\Loop\Exceptions;
 
 use Exception;
 
-class LoopMcpException extends Exception
-{
-}
+class LoopMcpException extends Exception {}

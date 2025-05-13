@@ -3,13 +3,13 @@
 namespace Kirschbaum\Loop\Tools\Models;
 
 use Exception;
-use Prism\Prism\Tool as PrismTool;
+use Illuminate\Database\Eloquent\Model;
+use Kirschbaum\Loop\Concerns\Makeable;
 use Kirschbaum\Loop\Contracts\Tool;
+use Kirschbaum\Loop\Tools\Models\Concerns\FormatsModelAttributes;
 use Prism\Prism\Schema\NumberSchema;
 use Prism\Prism\Schema\StringSchema;
-use Kirschbaum\Loop\Concerns\Makeable;
-use Illuminate\Database\Eloquent\Model;
-use Kirschbaum\Loop\Tools\Models\Concerns\FormatsModelAttributes;
+use Prism\Prism\Tool as PrismTool;
 
 /**
  * @method static self make(string $modelClass, string $pluralLabel)
@@ -23,8 +23,7 @@ class ListModelsTool implements Tool
         /** @param  class-string<Model> $modelClass */
         private string $modelClass,
         private string $pluralLabel
-    ) {
-    }
+    ) {}
 
     public function build(): PrismTool
     {
@@ -88,15 +87,15 @@ class ListModelsTool implements Tool
                         return "No {$this->pluralLabel} found.";
                     }
 
-                    $result = 'Found ' . $records->count() . " {$this->pluralLabel}:\n\n";
+                    $result = 'Found '.$records->count()." {$this->pluralLabel}:\n\n";
 
                     foreach ($records as $record) {
-                        $result .= "ID: {$record->id}, " . $this->formatModelAttributes($record) . "\n";
+                        $result .= "ID: {$record->id}, ".$this->formatModelAttributes($record)."\n";
                     }
 
                     return $result;
                 } catch (Exception $e) {
-                    return "Error listing {$this->pluralLabel}: " . $e->getMessage();
+                    return "Error listing {$this->pluralLabel}: ".$e->getMessage();
                 }
             });
     }
@@ -105,6 +104,6 @@ class ListModelsTool implements Tool
     {
         $modelName = class_basename($this->modelClass);
 
-        return strtolower($modelName) . '_list_models';
+        return strtolower($modelName).'_list_models';
     }
 }

@@ -2,12 +2,12 @@
 
 namespace Kirschbaum\Loop\Tools\Models;
 
-use Prism\Prism\Tool as PrismTool;
-use Kirschbaum\Loop\Contracts\Tool;
-use Prism\Prism\Schema\NumberSchema;
-use Kirschbaum\Loop\Concerns\Makeable;
 use Illuminate\Database\Eloquent\Model;
+use Kirschbaum\Loop\Concerns\Makeable;
+use Kirschbaum\Loop\Contracts\Tool;
 use Kirschbaum\Loop\Tools\Models\Concerns\FormatsModelAttributes;
+use Prism\Prism\Schema\NumberSchema;
+use Prism\Prism\Tool as PrismTool;
 
 /**
  * @method static self make(string $modelClass, string $label)
@@ -21,8 +21,7 @@ class FindModelTool implements Tool
         /** @param  class-string<Model> $modelClass */
         private string $modelClass,
         private string $label,
-    ) {
-    }
+    ) {}
 
     public function build(): PrismTool
     {
@@ -62,6 +61,6 @@ class FindModelTool implements Tool
     {
         $modelName = class_basename($this->modelClass);
 
-        return strtolower($modelName) . '_find_model';
+        return strtolower($modelName).'_find_model';
     }
 }

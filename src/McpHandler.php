@@ -2,13 +2,13 @@
 
 namespace Kirschbaum\Loop;
 
-use Prism\Prism\Tool;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Kirschbaum\Loop\Enums\ErrorCode;
 use Kirschbaum\Loop\Enums\MessageType;
-use Prism\Prism\Exceptions\PrismException;
 use Kirschbaum\Loop\Exceptions\LoopMcpException;
+use Prism\Prism\Exceptions\PrismException;
+use Prism\Prism\Tool;
 
 class McpHandler
 {
@@ -59,7 +59,6 @@ class McpHandler
     /**
      * @param  array<array-key, mixed>  $clientInfo
      * @param  array<array-key, mixed>  $capabilities
-     *
      * @return array<array-key, mixed>
      */
     public function initialize(array $clientInfo, array $capabilities, string $protocolVersion): array
@@ -250,7 +249,6 @@ class McpHandler
 
                 case 'resources/read':
                     throw new LoopMcpException('Resource not found');
-
                 case 'tools/list':
                     return $this->listTools();
 
@@ -269,7 +267,6 @@ class McpHandler
 
                 case 'prompts/get':
                     throw new LoopMcpException('Prompt not found');
-
                 default:
                     throw new LoopMcpException($method);
             }
@@ -290,7 +287,6 @@ class McpHandler
      *
      * @param  string  $template  URI template (RFC 6570)
      * @param  string  $uri  URI to match against the template
-     *
      * @return array<array-key, mixed>|null Variables extracted from the URI or null if no match
      */
     protected function matchUriTemplate(string $template, string $uri): ?array
@@ -298,7 +294,7 @@ class McpHandler
         // Simple implementation for basic templates like "users://{userId}/profile"
         $pattern = preg_quote($template, '/');
         $pattern = preg_replace('/\\\\{([^}]+)\\\\}/', '(?P<$1>[^/]+)', $pattern);
-        $pattern = '/^' . $pattern . '$/';
+        $pattern = '/^'.$pattern.'$/';
 
         if (preg_match($pattern, $uri, $matches)) {
             $variables = [];

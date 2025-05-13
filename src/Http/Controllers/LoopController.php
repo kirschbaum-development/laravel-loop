@@ -2,12 +2,12 @@
 
 namespace Kirschbaum\Loop\Http\Controllers;
 
-use Kirschbaum\Loop\Loop;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Cache;
 use Kirschbaum\Loop\Http\Requests\AskRequest;
+use Kirschbaum\Loop\Loop;
 
 class LoopController extends Controller
 {

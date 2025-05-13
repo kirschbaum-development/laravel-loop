@@ -2,10 +2,10 @@
 
 namespace Workbench\App\Providers;
 
+use Illuminate\Support\ServiceProvider;
+use Kirschbaum\Loop\Facades\Loop;
 use Kirschbaum\Loop\Toolkits;
 use Workbench\App\Models\User;
-use Kirschbaum\Loop\Facades\Loop;
-use Illuminate\Support\ServiceProvider;
 
 class WorkbenchServiceProvider extends ServiceProvider
 {
@@ -25,7 +25,5 @@ class WorkbenchServiceProvider extends ServiceProvider
     /**
      * Bootstrap services.
      */
-    public function boot(): void
-    {
-    }
+    public function boot(): void {}
 }

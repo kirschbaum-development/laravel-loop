@@ -2,17 +2,17 @@
 
 namespace Kirschbaum\Loop\Tools\Models;
 
+use Illuminate\Contracts\Container\BindingResolutionException;
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Kirschbaum\Loop\Concerns\Makeable;
+use Kirschbaum\Loop\Contracts\Tool;
+use Prism\Prism\Tool as PrismTool;
 use ReflectionClass;
 use ReflectionMethod;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
-use Prism\Prism\Tool as PrismTool;
-use Illuminate\Support\Facades\Log;
-use Kirschbaum\Loop\Contracts\Tool;
-use Illuminate\Support\Facades\File;
-use Kirschbaum\Loop\Concerns\Makeable;
-use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Contracts\Container\BindingResolutionException;
 
 class DescribeModelFactoryTool implements Tool
 {
@@ -35,7 +35,7 @@ class DescribeModelFactoryTool implements Tool
                 $files = File::files($factoryPath);
 
                 foreach ($files as $file) {
-                    $className = $namespace . $file->getBasename('.php');
+                    $className = $namespace.$file->getBasename('.php');
 
                     if (! class_exists($className)) {
                         continue;
@@ -93,7 +93,7 @@ class DescribeModelFactoryTool implements Tool
                     $output .= "  Model: {$info['model']}\n";
 
                     if (! empty($info['methods'])) {
-                        $output .= "  Available States/Methods: \n    - " . implode("\n    - ", $info['methods']) . "\n";
+                        $output .= "  Available States/Methods: \n    - ".implode("\n    - ", $info['methods'])."\n";
                     } else {
                         $output .= "  Available States/Methods: None\n";
                     }

@@ -3,15 +3,15 @@
 namespace Kirschbaum\Loop\Tools\Filament;
 
 use Exception;
-use Prism\Prism\Tool as PrismTool;
 use Filament\Tables\Columns\Column;
-use Illuminate\Support\Facades\Log;
-use Kirschbaum\Loop\Contracts\Tool;
-use Kirschbaum\Loop\Concerns\Makeable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
+use Kirschbaum\Loop\Concerns\Makeable;
+use Kirschbaum\Loop\Contracts\Tool;
 use Kirschbaum\Loop\Exceptions\LoopMcpException;
-use Symfony\Component\HttpFoundation\Exception\JsonException;
 use Kirschbaum\Loop\Tools\Filament\Concerns\ProvidesFilamentResourceInstance;
+use Prism\Prism\Tool as PrismTool;
+use Symfony\Component\HttpFoundation\Exception\JsonException;
 
 class GetFilamentResourceDataTool implements Tool
 {
@@ -96,7 +96,7 @@ class GetFilamentResourceDataTool implements Tool
                     return json_encode($outputData);
                 } catch (Exception $e) {
                     Log::error("[Laravel Loop] Error processing resource data: {$e->getMessage()}");
-                    Log::debug('[Laravel Loop] Error trace: ' . $e->getTraceAsString());
+                    Log::debug('[Laravel Loop] Error trace: '.$e->getTraceAsString());
 
                     return sprintf('Error processing data for resource %s: %s', get_class($resource), $e->getMessage());
                 }

@@ -3,12 +3,12 @@
 namespace Kirschbaum\Loop\Tools\Models;
 
 use Exception;
-use ReflectionClass;
-use Prism\Prism\Tool as PrismTool;
-use Kirschbaum\Loop\Contracts\Tool;
-use Kirschbaum\Loop\Concerns\Makeable;
 use Illuminate\Database\Eloquent\Model;
+use Kirschbaum\Loop\Concerns\Makeable;
+use Kirschbaum\Loop\Contracts\Tool;
 use Kirschbaum\Loop\Tools\Models\Concerns\ProvidesModelColumns;
+use Prism\Prism\Tool as PrismTool;
+use ReflectionClass;
 
 /**
  * @method static self make(string $modelClass, string $label, string $pluralLabel)
@@ -23,8 +23,7 @@ class DescribeModelTool implements Tool
         private string $modelClass,
         private string $label,
         private string $pluralLabel
-    ) {
-    }
+    ) {}
 
     public function build(): PrismTool
     {
@@ -68,7 +67,7 @@ class DescribeModelTool implements Tool
 
                     return (string) json_encode($data, JSON_PRETTY_PRINT);
                 } catch (Exception $e) {
-                    return (string) json_encode(['error' => 'Error retrieving model information: ' . $e->getMessage()]);
+                    return (string) json_encode(['error' => 'Error retrieving model information: '.$e->getMessage()]);
                 }
             });
     }
@@ -77,12 +76,11 @@ class DescribeModelTool implements Tool
     {
         $modelName = class_basename($this->modelClass);
 
-        return strtolower($modelName) . '_describe_model';
+        return strtolower($modelName).'_describe_model';
     }
 
     /**
      * @param  class-string<Model>  $modelClass
-     *
      * @return array<array-key, array<array-key, mixed>>
      */
     protected function getDocblockRelationships(string $modelClass): array
