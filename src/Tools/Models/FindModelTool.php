@@ -23,6 +23,13 @@ class FindModelTool implements Tool
         private string $label,
     ) {}
 
+    public function getName(): string
+    {
+        $modelName = class_basename($this->modelClass);
+
+        return strtolower($modelName).'_find_model';
+    }
+
     public function build(): PrismTool
     {
         return app(PrismTool::class)
@@ -55,12 +62,5 @@ class FindModelTool implements Tool
 
                 return $result;
             });
-    }
-
-    public function getName(): string
-    {
-        $modelName = class_basename($this->modelClass);
-
-        return strtolower($modelName).'_find_model';
     }
 }

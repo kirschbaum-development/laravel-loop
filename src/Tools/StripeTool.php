@@ -5,6 +5,7 @@ namespace Kirschbaum\Loop\Tools;
 use Exception;
 use Kirschbaum\Loop\Concerns\Makeable;
 use Kirschbaum\Loop\Contracts\Tool;
+use Kirschbaum\Loop\Enums\Mode;
 use Prism\Prism\Tool as PrismTool;
 use Stripe\Exception\ApiErrorException;
 use Stripe\StripeClient;
@@ -16,11 +17,12 @@ class StripeTool implements Tool
 {
     use Makeable;
 
-    public string $description = 'make a call to the stripe api. You can use this tool to fetch any stripe related data.';
+    public string $description = 'make a call to the stripe api. You can use this tool to fetch any stripe related data. Please double check with the user for any non-GET requests.';
 
     public function __construct(
         public readonly ?string $apiKey = null,
         ?string $description = null,
+        public readonly Mode $mode = Mode::ReadOnly,
     ) {
         $this->description = $description ?? $this->description;
     }
@@ -49,15 +51,13 @@ class StripeTool implements Tool
                     return "Error: Stripe SDK not installed. Please install it using 'composer require stripe/stripe-php'.";
                 }
 
-                // Initialize Stripe client with API key
                 $stripe = new StripeClient(
                     $this->getApiKey()
                 );
 
                 // TODO: Refactor this code
                 try {
-                    // $queryData = $query ? json_decode(json_encode($query), true) : [];
-                    $queryData = [];
+                    $queryData = $query ? json_decode(json_encode($query), true) : [];
 
                     if (json_last_error() !== JSON_ERROR_NONE) {
                         $queryData = [];
@@ -66,9 +66,11 @@ class StripeTool implements Tool
                     $method = strtoupper($method);
                     $bodyData = null;
 
-                    // Parse body if provided and method is not GET
                     if ($body !== null && ! empty($body) && $method !== 'GET') {
-                        // Determine content type, default to application/json
+                        if ($this->mode === Mode::ReadOnly) {
+                            return 'Error: ReadOnly mode is enabled. POST requests are not allowed.';
+                        }
+
                         $effectiveContentType = $contentType ?: 'application/json';
 
                         // If content type is JSON, try to parse it

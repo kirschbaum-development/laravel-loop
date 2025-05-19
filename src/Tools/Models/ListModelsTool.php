@@ -25,6 +25,13 @@ class ListModelsTool implements Tool
         private string $pluralLabel
     ) {}
 
+    public function getName(): string
+    {
+        $modelName = class_basename($this->modelClass);
+
+        return strtolower($modelName).'_list_models';
+    }
+
     public function build(): PrismTool
     {
         return app(PrismTool::class)
@@ -98,12 +105,5 @@ class ListModelsTool implements Tool
                     return "Error listing {$this->pluralLabel}: ".$e->getMessage();
                 }
             });
-    }
-
-    public function getName(): string
-    {
-        $modelName = class_basename($this->modelClass);
-
-        return strtolower($modelName).'_list_models';
     }
 }

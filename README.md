@@ -5,7 +5,7 @@ Laravel Loop is a powerful Model Context Protocol (MCP) server designed specific
 Laravel Loop uses [Prism](https://github.com/prism-ai/prism) behind the scenes to build the tools.
 
 > [!IMPORTANT]
-> Laravel Loop is still in development and this is a beta version.
+> Laravel Loop and its pre-built tools are still in development and this is a beta version.
 
 ## What It Does
 
@@ -14,8 +14,12 @@ Laravel Loop allows you to:
 - Create and expose your own tools directly integrated with your Laravel application
 - Connect with MCP clients like Claude Code, Cursor, Windsurf, and more
 
-Pre-built tools:
+**Pre-built tools:**
+
 * [Filament MCP Server](https://github.com/kirschbaum-development/laravel-loop-filament).
+* Laravel Model Tools (Interact with your models data): `Kirschbaum\Loop\Toolkits\LaravelModelToolkit` (Write operations to come)
+* Laravel Factories Tools (Create test data from your MCP Client): `Kirschbaum\Loop\Toolkits\LaravelFactoriesToolkit`
+* Stripe Tool (Interact with the Stripe API): `Kirschbaum\Loop\Tools\StripeTool`
 
 ## Installation
 

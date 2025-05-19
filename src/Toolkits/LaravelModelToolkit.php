@@ -2,20 +2,21 @@
 
 namespace Kirschbaum\Loop\Toolkits;
 
+use Exception;
+use Kirschbaum\Loop\Enums\Mode;
 use Filament\Resources\Resource;
-use Illuminate\Database\Eloquent\Model;
+use Kirschbaum\Loop\ResourceData;
 use Illuminate\Support\Pluralizer;
-use Kirschbaum\Loop\Collections\ToolCollection;
 use Kirschbaum\Loop\Concerns\Makeable;
 use Kirschbaum\Loop\Contracts\Toolkit;
-use Kirschbaum\Loop\Enums\Mode;
-use Kirschbaum\Loop\ResourceData;
-use Kirschbaum\Loop\Tools\Models\CreateModelTool;
-use Kirschbaum\Loop\Tools\Models\DeleteModelTool;
-use Kirschbaum\Loop\Tools\Models\DescribeModelTool;
+use Illuminate\Database\Eloquent\Model;
+use Kirschbaum\Loop\Collections\ToolCollection;
 use Kirschbaum\Loop\Tools\Models\FindModelTool;
 use Kirschbaum\Loop\Tools\Models\ListModelsTool;
+use Kirschbaum\Loop\Tools\Models\CreateModelTool;
+use Kirschbaum\Loop\Tools\Models\DeleteModelTool;
 use Kirschbaum\Loop\Tools\Models\UpdateModelTool;
+use Kirschbaum\Loop\Tools\Models\DescribeModelTool;
 
 /**
  * @method static self make(Model[] $models, Mode $mode = Mode::ReadOnly)
@@ -28,7 +29,7 @@ class LaravelModelToolkit implements Toolkit
      * @param  list<Model>  $models
      */
     public function __construct(
-        public readonly array $models = [],
+        public readonly array $models,
         public readonly Mode $mode = Mode::ReadOnly,
     ) {}
 
@@ -77,6 +78,6 @@ class LaravelModelToolkit implements Toolkit
             );
         }
 
-        throw new \Exception("Resource class {$modelClass} is not a valid resource or model class");
+        throw new Exception("Resource class {$modelClass} is not a valid resource or model class");
     }
 }
