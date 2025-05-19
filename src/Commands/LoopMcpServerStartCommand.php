@@ -11,7 +11,6 @@ use React\EventLoop\Loop;
 use React\Stream\ReadableResourceStream;
 use React\Stream\WritableResourceStream;
 
-// Check if pcntl extension is available
 if (! function_exists('pcntl_signal')) {
     fwrite(STDERR, "The pcntl extension is required for signal handling but is not available.\n");
 }
@@ -27,7 +26,9 @@ class LoopMcpServerStartCommand extends Command
 
     public function handle(McpHandler $mcpHandler): int
     {
-        $this->info('Starting OpenControl MCP proxy server');
+        if ($this->option('debug')) {
+            $this->info('Starting Laravel Loop MCP server (STDIO transport)');
+        }
 
         if ($this->option('user-id')) {
             $userModel = $this->option('user-model') ?? 'App\\Models\\User';
@@ -40,7 +41,10 @@ class LoopMcpServerStartCommand extends Command
             }
 
             Auth::login($user);
-            $this->info(sprintf('Authenticated with user ID %s', $this->option('user-id')));
+
+            if ($this->option('debug')) {
+                $this->info(sprintf('Authenticated with user ID %s', $this->option('user-id')));
+            }
         }
 
         $loop = Loop::get();
@@ -76,13 +80,19 @@ class LoopMcpServerStartCommand extends Command
             }
         });
 
-        $this->info('Laravel Loop MCP server running. Press Ctrl+C or send SIGTERM to stop.');
+        if ($this->option('debug')) {
+            $this->info('Laravel Loop MCP server running. Press Ctrl+C or send SIGTERM to stop.');
+        }
 
         // Add signal handlers if pcntl is available
         if (function_exists('pcntl_signal')) {
             $loop->addSignal(SIGINT, function ($signal) use ($loop) {
                 info('Received signal: '.$signal.'. Shutting down...');
-                $this->info('Received signal: '.$signal.'. Shutting down...');
+
+                if ($this->option('debug')) {
+                    $this->info('Received signal: '.$signal.'. Shutting down...');
+                }
+
                 $loop->stop();
 
                 exit(0);
@@ -90,7 +100,11 @@ class LoopMcpServerStartCommand extends Command
 
             $loop->addSignal(SIGTERM, function ($signal) use ($loop) {
                 info('Received signal: '.$signal.'. Shutting down...');
-                $this->info('Received signal: '.$signal.'. Shutting down...');
+
+                if ($this->option('debug')) {
+                    $this->info('Received signal: '.$signal.'. Shutting down...');
+                }
+
                 $loop->stop();
 
                 exit(0);

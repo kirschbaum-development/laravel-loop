@@ -3,15 +3,15 @@
 namespace Kirschbaum\Loop\Tools\Filament;
 
 use Exception;
+use JsonException;
+use Prism\Prism\Tool as PrismTool;
 use Filament\Tables\Columns\Column;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
-use Kirschbaum\Loop\Concerns\Makeable;
 use Kirschbaum\Loop\Contracts\Tool;
+use Kirschbaum\Loop\Concerns\Makeable;
+use Illuminate\Database\Eloquent\Model;
 use Kirschbaum\Loop\Exceptions\LoopMcpException;
 use Kirschbaum\Loop\Tools\Filament\Concerns\ProvidesFilamentResourceInstance;
-use Prism\Prism\Tool as PrismTool;
-use Symfony\Component\HttpFoundation\Exception\JsonException;
 
 class GetFilamentResourceDataTool implements Tool
 {
@@ -23,7 +23,7 @@ class GetFilamentResourceDataTool implements Tool
         return app(PrismTool::class)
             ->as($this->getName())
             ->for('Gets the data for a given Filament resource, applying optional filters provided in the describe_filament_resource tool.')
-            ->withStringParameter('resource', 'The class name of the resource to get data for.', required: true)
+            ->withStringParameter('resource', 'The resource class name of the resource to get data for, from the list_filament_resources tool.', required: true)
             ->withStringParameter('filters', 'JSON string of filters to apply (e.g., \'{"status": "published", "author_id": [1, 2]}\').', required: false)
             ->using(function (string $resource, ?string $filters = null) {
                 $resource = $this->getResourceInstance($resource);
@@ -45,7 +45,7 @@ class GetFilamentResourceDataTool implements Tool
                         });
 
                     foreach ($listPage->getTable()->getFilters() as $filter) {
-                        if ($filter->isMultiple()) {
+                        if (method_exists($filter, 'isMultiple') && $filter->isMultiple()) {
                             $listPage->tableFilters[$filter->getName()] = [
                                 'values' => isset($filters[$filter->getName()])
                                     ? (array) $filters[$filter->getName()]
@@ -62,7 +62,9 @@ class GetFilamentResourceDataTool implements Tool
                     $results = $listPage->getFilteredTableQuery()->take(10)->get();
 
                     $outputData = $results->map(function (Model $model) use ($tableColumns) {
-                        $rowData = [];
+                        $rowData = [
+                            $model->getKeyName() => $model->getKey(),
+                        ];
 
                         foreach ($tableColumns as $column) {
                             /** @var Column $column */
@@ -108,22 +110,25 @@ class GetFilamentResourceDataTool implements Tool
         return 'get_filament_resource_data';
     }
 
-    protected function parseFilters(string $filtersJson): array
+    protected function parseFilters(?string $filtersJson = null): array
     {
         $filters = [];
 
-        if ($filtersJson) {
-            try {
-                $decodedFilters = json_decode($filtersJson, true, 512, JSON_THROW_ON_ERROR);
+        if (! $filtersJson) {
+            return $filters;
+        }
 
-                if (is_array($decodedFilters)) {
-                    $filters = $decodedFilters;
-                } else {
-                    throw new LoopMcpException('Error: Invalid JSON provided for filters.');
-                }
-            } catch (JsonException $e) {
-                throw new LoopMcpException(sprintf('Error decoding filters JSON: %s', $e->getMessage()));
+        try {
+            $decodedFilters = json_decode($filtersJson, true, 512, JSON_THROW_ON_ERROR);
+
+            if (is_array($decodedFilters)) {
+                $filters = $decodedFilters;
+            } else {
+                throw new LoopMcpException('Error: Invalid JSON provided for filters.');
             }
+        } catch (JsonException $e) {
+            logger()->error($e);
+            throw new LoopMcpException(sprintf('Error decoding filters JSON: %s', $e->getMessage()));
         }
 
         return $filters;

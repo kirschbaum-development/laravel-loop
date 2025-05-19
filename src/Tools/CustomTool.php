@@ -72,7 +72,7 @@ class CustomTool implements Tool
         $properties = $config['properties'] ?? [];
 
         /** @var array<int, string> $requiredFields */
-        $requiredFields = $config['required_fields'] ?? [];
+        $requiredFields = $config['required'] ?? [];
 
         /** @var bool $allowAdditional */
         $allowAdditional = $config['allow_additional_properties'] ?? false;

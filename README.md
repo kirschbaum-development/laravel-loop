@@ -14,12 +14,7 @@ Laravel Loop allows you to:
 - Create and expose your own tools directly integrated with your Laravel application
 - Connect with MCP clients like Claude Code, Cursor, Windsurf, and more
 
-It also ships with some pre-built tools (we are planning to add more and refine the existing ones):
-
-- Expose your data through Laravel Models using our pre-built toolkit (`LaravelModelToolkit`)
-- Expose your Filament Resources (`FilamentToolkit`)
-- Generate test data using Laravel Factories (`LaravelFactoriesToolkit`)
-- Talk with the Stripe API (`StripeTool`)
+Laravel Loop ships with a the Filament MCP Server tool, which you can install and use following [this link](https://github.com/kirschbaum-development/laravel-loop-filament).
 
 ## Installation
 
@@ -37,7 +32,7 @@ php artisan vendor:publish --tag="loop-config"
 
 ## Usage
 
-First, you must register your tools (If you don't know where to put, put in `app/Providers/AppServiceProvider`). The package provides some pre-built tools:
+First, you must register your tools (If you don't know where to put, put in `app/Providers/AppServiceProvider`).
 
 ```php
 use Illuminate\Support\ServiceProvider;
@@ -45,18 +40,12 @@ use Kirschbaum\Loop\Facades\Loop;
 use Kirschbaum\Loop\Toolkits;
 use Kirschbaum\Loop\Tools;
 
-Loop::toolkit(Toolkits\FilamentToolkit::make());
-Loop::toolkit(Toolkits\LaravelModelToolkit::make(
-    models: [
-        \App\Models\User::class,
-        \App\Models\Subscription::class,
-    ]
-));
-Loop::toolkit(Toolkits\LaravelFactoriesToolkit::make());
-Loop::tool(Tools\StripeTool::make());
+Loop::toolkit(Kirschbaum\Loop\Filament\FilamentToolkit::make());
 ```
 
-But, the power comes from your custom tools.
+### Custom Tools
+
+To build your own tools, you can use the `Loop::tool` method.
 
 ```php
 use Kirschbaum\Loop\Facades\Loop;
@@ -76,6 +65,30 @@ Loop::tool(
     ),
 );
 ```
+
+The available parameters types are:
+
+```
+[
+    parameters: [
+        'name' => ['type' => 'string', 'description' => 'The name of the user', 'required' => true],
+        'age' => ['type' => 'integer', 'description' => 'The age of the user'],
+        'address' => [
+            'type' => 'object', 
+            'description' => 'The address of the user', 
+            'properties' => [
+                'street' => ['type' => 'string', 'description' => 'The street of the user'],
+                'city' => ['type' => 'string', 'description' => 'The city of the user'],
+                'state' => ['type' => 'string', 'description' => 'The state of the user'],
+                'zip' => ['type' => 'string', 'description' => 'The zip of the user'],
+            ],
+            'required' => ['street', 'city', 'state', 'zip'],
+        ]],
+    ],
+]
+```
+
+### Custom Tool Objects
 
 You can also build your own tool classes. Each tool must implement the `Tool` contract, and return a `Prism\Prism\Tool` instance in the `build` method.
 
@@ -181,6 +194,18 @@ LOOP_STREAMABLE_HTTP_ENABLED=true
 This will expose an MCP endpoint at `/mcp` that supports both JSON-RPC and Server-Sent Events. The endpoint is protected by Laravel Sanctum by default.
 
 See [HTTP Streaming Documentation](docs/http-streaming.md) for more details on configuration, and usage.
+
+**Authentication**
+
+If you are using the Streamable HTTP transport in any public endpoint, make sure you set the `streamable_http.middleware` config option to secure your endpoint. We recommend using something like Sanctum to protected the endpoint.
+
+## Troubleshooting
+
+**Connection failed: MCP error -32000: Connection closed**
+
+If you get this error, it likely means there's some error happening in your application. Check your applicationlogs for more details.
+
+***
 
 ## Roadmap
 

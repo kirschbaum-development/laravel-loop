@@ -158,9 +158,9 @@ class DescribeFilamentResourceTool implements Tool
 
             $filters = array_merge($searchableColumnFilters, $existingFilters); // Merge, giving priority to existing explicit filters if names collide
 
-            $rowActions = collect($table->getActions()) // Actions column actions
-                ->map(fn (Action $action) => $this->mapTableAction($action))
-                ->all();
+            // $rowActions = collect($table->getActions()) // Actions column actions
+            //     ->map(fn (Action $action) => $this->mapTableAction($action))
+            //     ->all();
 
             $bulkActions = collect($table->getBulkActions()) // Bulk actions
                 ->map(fn (BulkAction $action) => $this->mapTableAction($action))
@@ -170,7 +170,6 @@ class DescribeFilamentResourceTool implements Tool
                 'columns' => $columns,
                 'filters' => array_values($filters), // Re-index the array
                 'actions' => [
-                    'row' => $rowActions,
                     'bulk' => $bulkActions,
                 ],
             ];
