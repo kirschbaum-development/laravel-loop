@@ -14,7 +14,8 @@ Laravel Loop allows you to:
 - Create and expose your own tools directly integrated with your Laravel application
 - Connect with MCP clients like Claude Code, Cursor, Windsurf, and more
 
-Laravel Loop ships with a the Filament MCP Server tool, which you can install and use following [this link](https://github.com/kirschbaum-development/laravel-loop-filament).
+Pre-built tools:
+* [Filament MCP Server](https://github.com/kirschbaum-development/laravel-loop-filament).
 
 ## Installation
 
