@@ -2,10 +2,8 @@
 
 namespace Kirschbaum\Loop\Tools\Filament;
 
-use Filament\Actions\Action as PageAction;
 use Filament\Resources\Pages\Page;
 use Filament\Support\Contracts\TranslatableContentDriver;
-use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\BulkAction;
 use Filament\Tables\Contracts\HasTable;
 use Illuminate\Support\Facades\Log;

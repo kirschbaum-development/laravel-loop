@@ -3,15 +3,15 @@
 namespace Kirschbaum\Loop\Tools\Filament;
 
 use Exception;
-use JsonException;
-use Prism\Prism\Tool as PrismTool;
 use Filament\Tables\Columns\Column;
-use Illuminate\Support\Facades\Log;
-use Kirschbaum\Loop\Contracts\Tool;
-use Kirschbaum\Loop\Concerns\Makeable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
+use JsonException;
+use Kirschbaum\Loop\Concerns\Makeable;
+use Kirschbaum\Loop\Contracts\Tool;
 use Kirschbaum\Loop\Exceptions\LoopMcpException;
 use Kirschbaum\Loop\Tools\Filament\Concerns\ProvidesFilamentResourceInstance;
+use Prism\Prism\Tool as PrismTool;
 
 class GetFilamentResourceDataTool implements Tool
 {
