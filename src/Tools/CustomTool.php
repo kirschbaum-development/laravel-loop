@@ -6,33 +6,26 @@ use Closure;
 use Kirschbaum\Loop\Concerns\Makeable;
 use Kirschbaum\Loop\Contracts\Tool;
 use Prism\Prism\Contracts\Schema;
-use Prism\Prism\Schema\BooleanSchema;
-use Prism\Prism\Schema\NumberSchema;
-use Prism\Prism\Schema\ObjectSchema;
-use Prism\Prism\Schema\StringSchema;
 use Prism\Prism\Tool as PrismTool;
 
 class CustomTool implements Tool
 {
     use Makeable;
 
+    private PrismTool $prismTool;
+
     public function __construct(
         public readonly string $name,
         public readonly string $description,
-        /** @var array<string, array{type?: string, description?: string, required?: bool}> */
-        public readonly array $parameters,
-        public readonly Closure $handler,
-    ) {}
+    ) {
+        $this->prismTool = app(PrismTool::class)
+            ->as($this->getName())
+            ->for($this->description);
+    }
 
     public function build(): PrismTool
     {
-        $tool = app(PrismTool::class)
-            ->as($this->getName())
-            ->for($this->description);
-
-        $this->buildParameters($tool);
-
-        return $tool->using($this->handler);
+        return $this->prismTool;
     }
 
     public function getName(): string
@@ -40,93 +33,81 @@ class CustomTool implements Tool
         return $this->name;
     }
 
-    private function buildParameters(PrismTool $tool): void
+    public function using(Closure|callable $handler): self
     {
-        foreach ($this->parameters as $name => $config) {
-            $type = $config['type'] ?? 'string';
-            $description = $config['description'] ?? '';
-            $required = $config['required'] ?? false;
+        $this->prismTool->using(fn: $handler);
 
-            match ($type) {
-                'string' => $tool->withStringParameter($name, $description, required: $required),
-                'integer', 'number' => $tool->withNumberParameter($name, $description, required: $required),
-                'boolean' => $tool->withBooleanParameter($name, $description, required: $required),
-                'object' => $this->buildObjectParameter($tool, $name, $config),
-                default => $tool->withStringParameter($name, $description, required: $required),
-            };
-        }
+        return $this;
+    }
+
+    public function withArrayParameter(
+        string $name,
+        string $description,
+        Schema $items,
+        bool $required = true,
+    ): self {
+        $this->prismTool->withArrayParameter($name, $description, $items, $required);
+
+        return $this;
+    }
+
+    public function withBooleanParameter(string $name, string $description, bool $required = true): self
+    {
+        $this->prismTool->withBooleanParameter($name, $description, $required);
+
+        return $this;
     }
 
     /**
-     * @param  array<string, mixed>  $config
+     * @param  array<int, string|int|float>  $options
      */
-    private function buildObjectParameter(PrismTool $tool, string $name, array $config): void
+    public function withEnumParameter(
+        string $name,
+        string $description,
+        array $options,
+        bool $required = true,
+    ): self {
+        $this->prismTool->withEnumParameter($name, $description, $options, $required);
+
+        return $this;
+    }
+
+    public function withNumberParameter(string $name, string $description, bool $required = true): self
     {
-        /** @var string $description */
-        $description = $config['description'] ?? '';
+        $this->prismTool->withNumberParameter($name, $description, $required);
 
-        /** @var bool $required */
-        $required = $config['required'] ?? false;
-
-        /** @var array<string, array<string, mixed>> $properties */
-        $properties = $config['properties'] ?? [];
-
-        /** @var array<int, string> $requiredFields */
-        $requiredFields = $config['required'] ?? [];
-
-        /** @var bool $allowAdditional */
-        $allowAdditional = $config['allow_additional_properties'] ?? false;
-
-        $schemaProperties = $this->buildSchemaArray($properties);
-
-        $tool->withObjectParameter(
-            name: $name,
-            description: $description,
-            properties: $schemaProperties,
-            requiredFields: $requiredFields,
-            allowAdditionalProperties: $allowAdditional,
-            required: $required
-        );
+        return $this;
     }
 
     /**
-     * @param  array<string, array<string, mixed>>  $parameters
-     * @return array<Schema>
+     * @param  array<int, Schema>  $properties
+     * @param  array<int, string>  $requiredFields
      */
-    private function buildSchemaArray(array $parameters): array
+    public function withObjectParameter(
+        string $name,
+        string $description,
+        array $properties,
+        array $requiredFields = [],
+        bool $allowAdditionalProperties = false,
+        bool $required = true,
+    ): self {
+
+        $this->prismTool->withObjectParameter($name, $description, $properties, $requiredFields, $allowAdditionalProperties, $required);
+
+        return $this;
+    }
+
+    public function withParameter(Schema $parameter, bool $required = true): self
     {
-        $schemaArray = [];
+        $this->prismTool->withParameter($parameter, $required);
 
-        foreach ($parameters as $name => $config) {
-            $type = $config['type'] ?? 'string';
+        return $this;
+    }
 
-            /** @var string $description */
-            $description = $config['description'] ?? '';
+    public function withStringParameter(string $name, string $description, bool $required = true): self
+    {
+        $this->prismTool->withStringParameter($name, $description, $required);
 
-            /** @var array<string, array<string, mixed>> $properties */
-            $properties = $config['properties'] ?? [];
-
-            /** @var array<int, string> $requiredFields */
-            $requiredFields = $config['required_fields'] ?? [];
-
-            /** @var bool $allowAdditional */
-            $allowAdditional = $config['allow_additional_properties'] ?? false;
-
-            $schemaArray[] = match ($type) {
-                'string' => new StringSchema($name, $description),
-                'integer', 'number' => new NumberSchema($name, $description),
-                'boolean' => new BooleanSchema($name, $description),
-                'object' => new ObjectSchema(
-                    $name,
-                    $description,
-                    $this->buildSchemaArray($properties),
-                    $requiredFields,
-                    $allowAdditional,
-                ),
-                default => new StringSchema($name, $description),
-            };
-        }
-
-        return $schemaArray;
+        return $this;
     }
 }

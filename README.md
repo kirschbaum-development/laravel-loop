@@ -60,38 +60,17 @@ Loop::tool(
     CustomTool::make(
         name: 'custom_tool',
         description: 'This is a custom tool',
-        parameters: [
-            'name' => ['type' => 'string', 'description' => 'The name of the user', 'required' => true],
-            'age' => ['type' => 'integer', 'description' => 'The age of the user'],
-        ],
-        handler: function (string $name, ?int $age = null) {
+    )
+        ->withStringParameter(name: 'name', description: 'The name of the user', required: true)
+        ->withIntegerParameter(name: 'age', description: 'The age of the user')
+        ->using(function (string $name, ?int $age = null) {
             return sprintf('Hello, %s! You are %d years old.', $name, $age ?? 'unknown');
-        },
-    ),
+        }),
+    );
 );
 ```
 
-The available parameters types are:
-
-```
-[
-    parameters: [
-        'name' => ['type' => 'string', 'description' => 'The name of the user', 'required' => true],
-        'age' => ['type' => 'integer', 'description' => 'The age of the user'],
-        'address' => [
-            'type' => 'object', 
-            'description' => 'The address of the user', 
-            'properties' => [
-                'street' => ['type' => 'string', 'description' => 'The street of the user'],
-                'city' => ['type' => 'string', 'description' => 'The city of the user'],
-                'state' => ['type' => 'string', 'description' => 'The state of the user'],
-                'zip' => ['type' => 'string', 'description' => 'The zip of the user'],
-            ],
-            'required' => ['street', 'city', 'state', 'zip'],
-        ]],
-    ],
-]
-```
+The available parameters types can be found in the [Prism Tool Documentation](https://prismphp.com/core-concepts/tools-function-calling.html#parameter-definition). 
 
 ### Custom Tool Objects
 
