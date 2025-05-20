@@ -12,7 +12,6 @@ parameters:
         - config
 
     excludePaths:
-        - src/Tools/Filament
         - src/Tools/StripeTool.php
 
     checkOctaneCompatibility: true
