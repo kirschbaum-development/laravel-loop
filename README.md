@@ -70,7 +70,7 @@ Loop::tool(
 );
 ```
 
-The available parameters types can be found in the [Prism Tool Documentation](https://prismphp.com/core-concepts/tools-function-calling.html#parameter-definition). 
+The available parameters types can be found in the [Prism Tool Documentation](https://prismphp.com/core-concepts/tools-function-calling.html#parameter-definition).
 
 ### Custom Tool Objects
 
@@ -182,6 +182,28 @@ See [HTTP Streaming Documentation](docs/http-streaming.md) for more details on c
 **Authentication**
 
 If you are using the Streamable HTTP transport in any public endpoint, make sure you set the `streamable_http.middleware` config option to secure your endpoint. We recommend using something like Sanctum to protected the endpoint.
+
+
+### HTTP+SSE Transport
+
+Laravel Loop also supports the [HTTP+SSE transport](https://modelcontextprotocol.io/specification/2024-11-05/basic/transports#http-with-sse) as specified in the MCP 2024-11-05 standard.
+
+To enable the HTTP+SSE transport, update your `.env` file:
+
+```bash
+LOOP_SSE_ENABLED=true
+```
+
+This will expose an MCP endpoint at `/mcp/sse` that implements the HTTP+SSE transport protocol. The endpoint is protected by Laravel Sanctum by default.
+
+The HTTP+SSE transport works as follows:
+
+1. Client establishes an SSE connection to `GET /mcp/sse`
+2. Server sends an `endpoint` event with a URI for client messages
+3. Client sends JSON-RPC requests as POST requests to this endpoint
+4. Server replies with responses through the SSE connection
+
+See [MCP SSE Transport Documentation](docs/mcp-sse-transport.md) for more details on configuration, implementation, and usage examples.
 
 ## Troubleshooting
 

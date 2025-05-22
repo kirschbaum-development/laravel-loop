@@ -40,4 +40,70 @@ return [
         */
         'middleware' => ['auth:sanctum'],
     ],
+
+    'sse' => [
+        /*
+        |--------------------------------------------------------------------------
+        | HTTP + SSE Transport Enabled
+        |--------------------------------------------------------------------------
+        |
+        | Determines whether SSE is enabled for the application.
+        |
+        */
+        'enabled' => env('LOOP_SSE_ENABLED', true),
+
+        /*
+        |--------------------------------------------------------------------------
+        | SSE Driver
+        |--------------------------------------------------------------------------
+        |
+        | This option controls the default SSE driver that will be used for
+        | maintaining server-sent events connections. Supported drivers: "file", "redis".
+        |
+        */
+        'driver' => env('LOOP_SSE_DRIVER', 'file'),
+
+        /*
+        |--------------------------------------------------------------------------
+        | SSE Path
+        |--------------------------------------------------------------------------
+        |
+        | The base path for SSE routes.
+        |
+        */
+        'path' => env('LOOP_SSE_PATH', '/mcp/sse'),
+
+        /*
+        |--------------------------------------------------------------------------
+        | SSE Middleware
+        |--------------------------------------------------------------------------
+        |
+        | The middleware used to authenticate MCP requests.
+        | We recommend using something like Laravel Sanctum here.
+        |
+        | WARNING: DO NOT LEAVE THIS ENDPOINT ENABLED AND UNPROTECTED IN PRODUCTION.
+        |
+        */
+        'middleware' => [],
+
+        /*
+        |--------------------------------------------------------------------------
+        | SSE Drivers
+        |--------------------------------------------------------------------------
+        |
+        | Configuration for each SSE driver.
+        |
+        */
+        'drivers' => [
+            'file' => [
+                'storage_dir' => storage_path('app/mcp_sse'),
+                'session_ttl' => 86400, // 24 hours in seconds
+            ],
+            'redis' => [
+                'prefix' => 'sse',
+                'session_ttl' => 86400, // 24 hours in seconds
+                'connection' => 'default',
+            ],
+        ],
+    ],
 ];

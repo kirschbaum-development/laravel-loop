@@ -12,7 +12,10 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class McpController extends Controller
 {
-    public function __construct(protected McpHandler $mcpHandler, protected SseService $sseService) {}
+    public function __construct(
+        protected McpHandler $mcpHandler,
+        protected SseService $sse
+    ) {}
 
     /**
      * Handle MCP requests.
@@ -57,14 +60,27 @@ class McpController extends Controller
      *
      * @param  array<array-key, mixed>  $messages  JSON-RPC messages from the client
      */
-    protected function handlePostSseResponse(array $messages): StreamedResponse
-    {
-        $response = $this->sseService->createPostSseResponse(
-            $messages,
-            fn ($message) => $this->mcpHandler->handle($message),
-        );
+    protected function handlePostSseResponse(
+        array $messages
+    ): StreamedResponse {
+        return $this->sse->createSseResponse(function () use ($messages) {
+            $this->sse->sendComment('stream opened');
 
-        return $response;
+            if (! isset($messages[0])) {
+                $messages = [$messages];
+            }
+
+            foreach ($messages as $message) {
+                if (! isset($message['id'])) {
+                    logger('Missing ID in message');
+
+                    continue;
+                }
+
+                $response = $this->mcpHandler->handle($message);
+                $this->sse->sendEvent($response);
+            }
+        });
     }
 
     /**

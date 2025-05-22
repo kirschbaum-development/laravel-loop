@@ -3,7 +3,9 @@
 namespace Kirschbaum\Loop;
 
 use Kirschbaum\Loop\Commands\LoopMcpServerStartCommand;
+use Kirschbaum\Loop\Services\SseDriverManager;
 use Kirschbaum\Loop\Services\SseService;
+use Kirschbaum\Loop\Services\SseSessionManager;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -36,8 +38,16 @@ class LoopServiceProvider extends PackageServiceProvider
             return $loop;
         });
 
-        $this->app->singleton(SseService::class, function ($app) {
+        $this->app->bind(SseService::class, function ($app) {
             return new SseService;
+        });
+
+        $this->app->bind(SseSessionManager::class, function ($app) {
+            return new SseSessionManager($app->make(SseDriverManager::class));
+        });
+
+        $this->app->bind(SseDriverManager::class, function ($app) {
+            return new SseDriverManager($app);
         });
     }
 }
