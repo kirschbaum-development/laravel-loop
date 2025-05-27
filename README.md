@@ -77,7 +77,7 @@ Loop::tool(
 );
 ```
 
-The available parameters types can be found in the [Prism Tool Documentation](https://prismphp.com/core-concepts/tools-function-calling.html#parameter-definition). 
+The available parameters types can be found in the [Prism Tool Documentation](https://prismphp.com/core-concepts/tools-function-calling.html#parameter-definition).
 
 ### Custom Tool Objects
 
@@ -130,14 +130,16 @@ class LaravelFactoriesToolkit implements Toolkit
 
 ## Connecting to the MCP server
 
-The MCP protocol has two main ways to connect: STDIO and Streamable HTTP.
+For this to be really useful, you need to connect your MCP client to the MCP server.
+
+The MCP protocol has two main ways to connect: STDIO and Streamable HTTP, and the deprecated HTTP+SSE transport. Laravel Loop supports all of them.
 
 ### STDIO
 
-To run the MCP server using STDIO, you must run the following command:
+To run the MCP server using STDIO, we provide the following artisan command:
 
 ```bash
-php artisan loop:mcp:start
+php artisan loop:mcp:start [--user-id=1] [--user-model=App\Models\User] [--debug]
 ```
 
 To connect Laravel Loop MCP server to Claude Code, for example, you can use the following command:
@@ -152,7 +154,7 @@ claude mcp add laravel-loop-mcp php /your/full/path/to/laravel/artisan loop:mcp:
 claude mcp add laravel-loop-mcp php /your/full/path/to/laravel/artisan loop:mcp:start --debug
 ```
 
-To add to Cursor, or any MCP clients with a JSON config file:
+To configure Laravel Loop in Cursor, Claude or any MCP clients with a JSON config file:
 
 ```json
 {
@@ -169,32 +171,102 @@ To add to Cursor, or any MCP clients with a JSON config file:
 }
 ```
 
-### Streamable HTTP Transport with SSE
+### Streamable HTTP & SSE
 
-Laravel Loop supports the [streamable HTTP transport](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports) for the MCP protocol, which includes SSE capabilities for client-initiated requests (POST).
+Having to run PHP or Node to run the MCP server can be annoying. To avoid this, you can use the Streamable HTTP or SSE transport, which connects the MCP client directly to your application via HTTP.
+
+Laravel Loop also supports the [streamable HTTP transport](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports) and the deprecated [HTTP+SSE transport](https://modelcontextprotocol.io/specification/2024-11-05/basic/transports#http-with-sse).
 
 > [!IMPORTANT]
-> NOTE: The Streamable HTTP transport is new and not yet supported by all MCP clients.
+> NOTE: The Streamable HTTP transport is new and not yet supported by all MCP clients, while the SSE (supported by most MCP clients) is deprecated.
+
+The following docs are for both transports. Please note you only need to enable one of them.
+
+#### 1. Enable and configurethe transport
 
 To enable the Streamable HTTP transport, update your `.env` file:
 
 ```bash
+# streamable http
 LOOP_STREAMABLE_HTTP_ENABLED=true
+
+# sse
+LOOP_SSE_ENABLED=true
 ```
 
-This will expose an MCP endpoint at `/mcp` that supports both JSON-RPC and Server-Sent Events. The endpoint is protected by Laravel Sanctum by default.
+**Note:** When using SSE, the default driver is `file`, which is the simplest and most convenient for local development. However, for production, we recommend using `redis` to avoid issues with file locking. You can change the driver and additional options in the `config/loop.php` file.
 
-See [HTTP Streaming Documentation](docs/http-streaming.md) for more details on configuration, and usage.
+This will expose two MCP endpoints:
+- `https://your-url.test/mcp` that supports both JSON-RPC and Server-Sent Events.
+- `https://your-url.test/mcp/sse` that supports only Server-Sent Events.
 
-**Authentication**
+#### 2. Configure authentication (optional)
 
-If you are using the Streamable HTTP transport in any public endpoint, make sure you set the `streamable_http.middleware` config option to secure your endpoint. We recommend using something like Sanctum to protected the endpoint.
+Be aware that if you are exposing your endpoint publicly, you are exposing your data to the world. To ensure your MCP endpoints are secure, make sure to configure the `streamable_http.middleware` or `sse.middleware` config options. We recommend using something like Sanctum (configured by default) to protected the endpoint.
+
+```php
+[
+    'streamable_http' => [
+        'middleware' => ['auth:sanctum'],
+    ],
+    
+    'sse' => [
+        'middleware' => ['auth:sanctum'],
+    ],
+]
+```
+
+#### 3. Add the MCP server to your client
+
+Then, you just need to configure the MCP server endpoint in your client:
+
+**Claude Code**
+
+```bash
+claude mcp add laravel-loop-mcp http://your-url.test/mcp/sse -t sse
+```
+
+**From JSON config file**
+
+```json
+{
+  "mcpServers": {
+    "laravel-loop-mcp": {
+      "url": "http://your-url.test/mcp/sse",
+    }
+  }
+}
+```
+
+Please note that not all clients support direct SSE connections. For those situations, you can proxy it through the `mcp-remote` package. This requires you to have Node.js (> 20) installed. Below an example using the [mcp-remote](https://github.com/geelen/mcp-remote) package.
+
+```json
+{
+  "mcpServers": {
+    "laravel-loop-mcp": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "https://your-remote-url.com/mcp",
+        "--header",
+        "Authorization: Bearer ${AUTH_TOKEN}"
+      ]
+    }
+  }
+}
+```
+
+***
 
 ## Troubleshooting
 
 **Connection failed: MCP error -32000: Connection closed**
 
 If you get this error, it likely means there's some error happening in your application. Check your applicationlogs for more details.
+
+**Make sure to check your application logs**
+
+If you are getting an unkown error, check your application logs for more details.
 
 ***
 
