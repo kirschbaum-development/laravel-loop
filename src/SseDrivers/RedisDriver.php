@@ -32,10 +32,10 @@ class RedisDriver implements SseDriverInterface
     {
         $prefix = $config['prefix'] ?? 'sse';
         $this->prefix = is_string($prefix) ? $prefix : 'sse';
-        
+
         $sessionTtl = $config['session_ttl'] ?? 86400;
         $this->sessionTtl = is_int($sessionTtl) ? $sessionTtl : 86400; // 24 hours
-        
+
         $connection = $config['connection'] ?? 'default';
         $this->connection = is_string($connection) ? $connection : 'default';
     }
@@ -184,14 +184,14 @@ class RedisDriver implements SseDriverInterface
              * @var array<array<string, mixed>> $messages
              */
             return collect($messages)->map(function (array $message): array {
-                if (isset($message['data']) && is_array($message['data']) && 
+                if (isset($message['data']) && is_array($message['data']) &&
                     isset($message['data']['result']) && is_array($message['data']['result']) &&
                     isset($message['data']['result']['tools']) && is_array($message['data']['result']['tools'])) {
                     /** @var array<mixed> $tools */
                     $tools = $message['data']['result']['tools'];
                     $message['data']['result']['tools'] = collect($tools)
                         ->map(function ($tool) {
-                            if (is_array($tool) && 
+                            if (is_array($tool) &&
                                 isset($tool['inputSchema']) && is_array($tool['inputSchema']) &&
                                 isset($tool['inputSchema']['properties']) && is_array($tool['inputSchema']['properties'])) {
                                 $tool['inputSchema']['properties'] = empty($tool['inputSchema']['properties'])

@@ -11,12 +11,11 @@ class SseDriverManager extends Manager
 {
     /**
      * Get the default driver name.
-     *
-     * @return string
      */
     public function getDefaultDriver(): string
     {
         $driver = $this->config->get('loop.sse.driver', 'file');
+
         return is_string($driver) ? $driver : 'file';
     }
 
