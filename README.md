@@ -3,7 +3,6 @@
 ![](images/laravel-loop.png)
 
 ![Laravel Supported Versions](https://img.shields.io/badge/laravel-10.x/11.x/12.x-green.svg)
-[![CI](https://github.com/kirschbaum-development/laravel-loop/actions/workflows/ci-checks.yml/badge.svg)](https://github.com/kirschbaum-development/laravel-loop/actions/workflows/ci-checks.yml)
 [![MIT Licensed](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/kirschbaum-development/laravel-loop.svg?style=flat-square)](https://packagist.org/packages/kirschbaum-development/laravel-loop)
 
