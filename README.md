@@ -1,5 +1,12 @@
 # Laravel Loop
 
+![](images/laravel-loop.png)
+
+![Laravel Supported Versions](https://img.shields.io/badge/laravel-10.x/11.x/12.x-green.svg)
+[![CI](https://github.com/kirschbaum-development/laravel-loop/actions/workflows/ci-checks.yml/badge.svg)](https://github.com/kirschbaum-development/laravel-loop/actions/workflows/ci-checks.yml)
+[![MIT Licensed](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/kirschbaum-development/laravel-loop.svg?style=flat-square)](https://packagist.org/packages/kirschbaum-development/laravel-loop)
+
 Laravel Loop is a powerful Model Context Protocol (MCP) server designed specifically for Laravel applications. It connects your Laravel application with AI assistants using MCP.
 
 Laravel Loop uses [Prism](https://github.com/prism-ai/prism) behind the scenes to build the tools.
@@ -196,7 +203,6 @@ If you get this error, it likely means there's some error happening in your appl
 - [ ] Add a chat component to the package, so you can use the tools inside the application without an MCP client.
 - [ ] Refine the existing tools
 - [ ] Add write capabilities to the existing tools
-- [ ] Add tests
 
 ## Security
 
