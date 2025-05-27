@@ -84,7 +84,7 @@ return [
         | WARNING: DO NOT LEAVE THIS ENDPOINT ENABLED AND UNPROTECTED IN PRODUCTION.
         |
         */
-        'middleware' => [],
+        'middleware' => ['auth:sanctum'],
 
         /*
         |--------------------------------------------------------------------------
@@ -99,6 +99,7 @@ return [
                 'storage_dir' => storage_path('app/mcp_sse'),
                 'session_ttl' => 86400, // 24 hours in seconds
             ],
+
             'redis' => [
                 'prefix' => 'sse',
                 'session_ttl' => 86400, // 24 hours in seconds
