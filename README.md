@@ -133,6 +133,12 @@ For this to be really useful, you need to connect your MCP client to the MCP ser
 
 The MCP protocol has two main ways to connect: STDIO and Streamable HTTP, and the deprecated HTTP+SSE transport. Laravel Loop supports all of them.
 
+The easiest way to configure your MCP client is to use the `php artisan loop:mcp:config` command. This will guide you through the process of configuring your MCP client.
+
+```bash
+php artisan loop:mcp:generate-config
+```
+
 ### STDIO
 
 To run the MCP server using STDIO, we provide the following artisan command:
@@ -181,7 +187,7 @@ Laravel Loop also supports the [streamable HTTP transport](https://modelcontextp
 
 The following docs are for both transports. Please note you only need to enable one of them.
 
-#### 1. Enable and configurethe transport
+#### 1. Enable and configure the transport
 
 To enable the Streamable HTTP transport, update your `.env` file:
 
@@ -196,8 +202,10 @@ LOOP_SSE_ENABLED=true
 **Note:** When using SSE, the default driver is `file`, which is the simplest and most convenient for local development. However, for production, we recommend using `redis` to avoid issues with file locking. You can change the driver and additional options in the `config/loop.php` file.
 
 This will expose two MCP endpoints:
-- `https://your-url.test/mcp` that supports both JSON-RPC and Server-Sent Events.
-- `https://your-url.test/mcp/sse` that supports only Server-Sent Events.
+- `/mcp` that supports the new Streamable HTTP transport.
+- `/mcp/sse` that supports the deprecated HTTP+SSE transport.
+
+**Note:** If you are running your application locally with **https**, most clients will fail due to the self-signed certificates. To avoid this, use the STDIO transport or use the **http** protocol locally.
 
 #### 2. Configure authentication (optional)
 

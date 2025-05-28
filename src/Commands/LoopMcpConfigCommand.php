@@ -3,6 +3,8 @@
 namespace Kirschbaum\Loop\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Str;
+use Kirschbaum\Loop\Enums\Providers;
 
 class LoopMcpConfigCommand extends Command
 {
@@ -15,22 +17,23 @@ class LoopMcpConfigCommand extends Command
     {
         $this->info('🔧 Laravel Loop MCP Server Configuration');
         $this->newLine();
+        $this->comment('This command will guide you through the process of configuring Laravel Loop in your MCP client.');
+        $this->comment('Please note that the configuration generated here could not work 100% of the time. You might need to tweak it a bit.');
 
+        $this->newLine();
+        $this->newLine();
+
+        /** @var string */
         $provider = $this->choice(
             'Which MCP provider will you be configuring?',
-            ['Claude Code', 'MCP Servers JSON (Claude Desktop, Cursor, etc)'],
+            array_map(fn (Providers $provider) => $provider->value, Providers::cases()),
             0
         );
 
-        if (! is_string($provider)) {
-            $this->error('Invalid provider');
-
-            return Command::FAILURE;
-        }
-
+        $provider = Providers::from($provider);
         $transport = $this->choice(
-            'Which transport method do you want to use?',
-            ['STDIO', 'HTTP + SSE', 'Streamable HTTP'],
+            'Which transport method do you want to use? STDIO is the default and recommended. If you are connecting to a production environment, you should use HTTP.',
+            ['STDIO', 'HTTP+SSE'],
             0
         );
 
@@ -45,7 +48,7 @@ class LoopMcpConfigCommand extends Command
         return Command::SUCCESS;
     }
 
-    private function generateStdioConfig(string $provider): void
+    private function generateStdioConfig(Providers $provider): void
     {
         $this->info('📋 STDIO Transport Configuration');
         $this->newLine();
@@ -67,14 +70,14 @@ class LoopMcpConfigCommand extends Command
 
         $projectPath = base_path();
 
-        if ($provider === 'Claude Code') {
+        if ($provider === Providers::ClaudeCode) {
             $this->generateClaudeCodeCommand($projectPath, $userId, $userModel);
         } else {
             $this->generateJsonConfig($projectPath, $userId, $userModel);
         }
     }
 
-    private function generateHttpSseConfig(string $provider): void
+    private function generateHttpSseConfig(Providers $provider): void
     {
         $this->info('🌐 HTTP + SSE Transport Configuration');
         $this->newLine();
@@ -88,10 +91,10 @@ class LoopMcpConfigCommand extends Command
             return;
         }
 
-        if ($provider === 'Claude Code') {
+        if ($provider === Providers::ClaudeCode) {
             $this->generateClaudeCodeHttpConfig($baseUrl, $ssePath);
         } else {
-            $this->generateJsonHttpConfig($baseUrl, $ssePath);
+            $this->generateJsonHttpConfig($provider, $baseUrl, $ssePath);
         }
     }
 
@@ -139,6 +142,7 @@ class LoopMcpConfigCommand extends Command
         $this->info('📄 JSON Configuration:');
         $this->newLine();
         $this->line('<fg=green>'.json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).'</>');
+
         $this->newLine();
         $this->comment('💡 Add this configuration to your MCP client configuration file.');
     }
@@ -154,16 +158,15 @@ class LoopMcpConfigCommand extends Command
             $command .= sprintf(' --header "%s"', implode(', ', $headers));
         }
 
-        $this->info('🎯 Claude Code HTTP + SSE Configuration Command:');
+        $this->comment('🎯 Claude Code HTTP + SSE Configuration Command:');
         $this->newLine();
         $this->line("<fg=green>{$command}</>");
+
         $this->newLine();
         $this->comment('💡 Copy and paste this command in your terminal to add the MCP server to Claude Code.');
+
         $this->newLine();
-        $this->info('🔧 Additional Setup Required:');
-        $this->line('1. Enable SSE in your .env file: LOOP_SSE_ENABLED=true');
-        $this->line('2. Configure authentication middleware in config/loop.php');
-        $this->line('3. Ensure your Laravel application is running and accessible');
+        $this->additionalHttpSetupMessages();
     }
 
     /**
@@ -206,7 +209,62 @@ class LoopMcpConfigCommand extends Command
         return $headers;
     }
 
-    private function generateJsonHttpConfig(string $baseUrl, string $ssePath): void
+    private function generateJsonHttpConfig(Providers $provider, string $baseUrl, string $ssePath): void
+    {
+        $headers = $this->collectHeaders();
+        if (in_array($provider, [Providers::ClaudeDesktop])) {
+            $this->generateJsonHttpConfigWithProxy($baseUrl, $headers);
+        } else {
+            $this->generateJsonHttpConfigFirstPartySupport($baseUrl, $ssePath, $headers);
+        }
+    }
+
+    /**
+     * @param  array<string>  $headers
+     */
+    private function generateJsonHttpConfigWithProxy(string $baseUrl, array $headers): void
+    {
+        $ssePath = config()->string('loop.streamable.path', '/mcp');
+
+        $args = [
+            'mcp-remote',
+            rtrim($baseUrl, '/').$ssePath,
+        ];
+
+        foreach ($headers as $header) {
+            $args[] = '--header';
+            $args[] = $header;
+        }
+
+        if (Str::startsWith($baseUrl, 'http://')) {
+            $args[] = '--allow-http';
+        }
+
+        $config = [
+            'mcpServers' => [
+                'laravel-loop-mcp' => [
+                    'command' => 'npx',
+                    'args' => $args,
+                ],
+            ],
+        ];
+
+        $this->comment('📄 Please copy the following JSON configuration to your MCP client configuration file.');
+        $this->newLine();
+
+        $this->line('<fg=green>'.json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).'</>');
+        $this->newLine();
+
+        $this->newLine();
+        $this->additionalHttpSetupMessages();
+        $this->line('4. Ensure your have Node.js (>=20) installed and accessible in your PATH.');
+        $this->line('5. [One-time only] Install the mcp-remote tool: `npm install -g mcp-remote`');
+    }
+
+    /**
+     * @param  array<string>  $headers
+     */
+    private function generateJsonHttpConfigFirstPartySupport(string $baseUrl, string $ssePath, array $headers): void
     {
         $config = [
             'mcpServers' => [
@@ -222,10 +280,18 @@ class LoopMcpConfigCommand extends Command
         $this->line('<fg=green>'.json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).'</>', 'verbatim');
         $this->newLine();
         $this->comment('💡 Add this configuration to your MCP client configuration file.');
+
         $this->newLine();
-        $this->info('🔧 Additional Setup Required:');
+        $this->additionalHttpSetupMessages();
+    }
+
+    private function additionalHttpSetupMessages(): void
+    {
+        $this->comment('🔧 Additional Setup Required: 🚨🚨🚨');
+        $this->newLine();
+
         $this->line('1. Enable SSE in your .env file: LOOP_SSE_ENABLED=true');
-        $this->line('2. Configure authentication middleware in config/loop.php');
-        $this->line('3. Ensure your Laravel application is running and accessible');
+        $this->line('2. Configure an authentication middleware in config/loop.php');
+        $this->line('3. Ensure your Laravel application is running and accessible through the configured base URL');
     }
 }
