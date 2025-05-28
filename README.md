@@ -32,7 +32,7 @@ Laravel Loop allows you to:
 You can install the package via composer:
 
 ```bash
-composer require kirschbaum/laravel-loop
+composer require kirschbaum-development/laravel-loop
 ```
 
 Publish the configuration file:
