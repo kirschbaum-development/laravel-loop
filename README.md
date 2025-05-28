@@ -6,12 +6,14 @@
 [![MIT Licensed](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/kirschbaum-development/laravel-loop.svg?style=flat-square)](https://packagist.org/packages/kirschbaum-development/laravel-loop)
 
-Laravel Loop is a powerful Model Context Protocol (MCP) server designed specifically for Laravel applications. It connects your Laravel application with AI assistants using MCP.
+Laravel Loop is a powerful Model Context Protocol (MCP) server designed specifically for Laravel applications. It connects your Laravel application with AI assistants using the MCP protocol.
 
 Laravel Loop uses [Prism](https://github.com/prism-ai/prism) behind the scenes to build the tools.
 
 > [!IMPORTANT]
 > Laravel Loop and its pre-built tools are still in development and this is a beta version.
+
+![](images/claude-desktop.png)
 
 ## What It Does
 
@@ -129,9 +131,9 @@ class LaravelFactoriesToolkit implements Toolkit
 
 ## Connecting to the MCP server
 
-For this to be really useful, you need to connect your MCP client to the MCP server.
+For this to be really useful, you need to connect your MCP client (Claude Code, Claude Desktop, Cursor, Windsurf, etc) to the Laravel LoopMCP server.
 
-The MCP protocol has two main ways to connect: STDIO and Streamable HTTP, and the deprecated HTTP+SSE transport. Laravel Loop supports all of them.
+The MCP protocol has two main transports to connect: STDIO and Streamable HTTP, and the deprecated HTTP+SSE transport. Laravel Loop supports all of them.
 
 The easiest way to configure your MCP client is to use the `php artisan loop:mcp:config` command. This will guide you through the process of configuring your MCP client.
 

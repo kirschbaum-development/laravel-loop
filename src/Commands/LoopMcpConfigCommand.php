@@ -21,6 +21,9 @@ class LoopMcpConfigCommand extends Command
         $this->comment('Please note that the configuration generated here could not work 100% of the time. You might need to tweak it a bit.');
 
         $this->newLine();
+        $this->comment('If you are testing things out for the first time, we recommend using the STDIO transport.');
+
+        $this->newLine();
         $this->newLine();
 
         /** @var string */
@@ -44,6 +47,18 @@ class LoopMcpConfigCommand extends Command
         } else {
             $this->generateHttpSseConfig($provider);
         }
+
+        $this->newLine();
+        $this->newLine();
+        $this->comment('🎉 Done! You can now use Laravel Loop in your MCP client.');
+
+        $this->newLine();
+        $this->comment('⭐ If you enjoyed Laravel Loop, please consider giving it a star on GitHub:');
+        $this->line('https://github.com/kirschbaum-development/laravel-loop');
+
+        $this->newLine();
+        $this->comment('🐛 If you had any issues, feel free to submit an issue on GitHub:');
+        $this->line('https://github.com/kirschbaum-development/laravel-loop/issues');
 
         return Command::SUCCESS;
     }
@@ -109,9 +124,11 @@ class LoopMcpConfigCommand extends Command
             }
         }
 
-        $this->info('🎯 Claude Code Configuration Command:');
+        $this->info('🎯🎯🎯 Claude Code Configuration Command: 🎯🎯🎯');
         $this->newLine();
-        $this->line("<fg=green>{$command}</>");
+
+        $this->table([], [[$command]]);
+
         $this->newLine();
         $this->comment('💡 Copy and paste this command in your terminal to add the MCP server to Claude Code.');
     }
@@ -139,12 +156,15 @@ class LoopMcpConfigCommand extends Command
             ],
         ];
 
-        $this->info('📄 JSON Configuration:');
+        $this->comment('🎯🎯🎯 Please copy the following JSON configuration to your MCP client configuration file. 🎯🎯🎯');
         $this->newLine();
-        $this->line('<fg=green>'.json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).'</>');
+
+        $this->table([], [[
+            json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
+        ]]);
 
         $this->newLine();
-        $this->comment('💡 Add this configuration to your MCP client configuration file.');
+        $this->newLine();
     }
 
     private function generateClaudeCodeHttpConfig(string $baseUrl, string $ssePath): void
@@ -160,7 +180,8 @@ class LoopMcpConfigCommand extends Command
 
         $this->comment('🎯 Claude Code HTTP + SSE Configuration Command:');
         $this->newLine();
-        $this->line("<fg=green>{$command}</>");
+
+        $this->table([], [[$command]]);
 
         $this->newLine();
         $this->comment('💡 Copy and paste this command in your terminal to add the MCP server to Claude Code.');
@@ -249,11 +270,12 @@ class LoopMcpConfigCommand extends Command
             ],
         ];
 
-        $this->comment('📄 Please copy the following JSON configuration to your MCP client configuration file.');
+        $this->comment('🎯🎯🎯 Please copy the following JSON configuration to your MCP client configuration file. 🎯🎯🎯');
         $this->newLine();
 
-        $this->line('<fg=green>'.json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).'</>');
-        $this->newLine();
+        $this->table([], [[
+            json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
+        ]]);
 
         $this->newLine();
         $this->additionalHttpSetupMessages();
@@ -275,19 +297,22 @@ class LoopMcpConfigCommand extends Command
             ],
         ];
 
-        $this->info('📄 JSON Configuration for HTTP + SSE:');
+        $this->comment('🎯🎯🎯 Please copy the following JSON configuration to your MCP client configuration file. 🎯🎯🎯');
         $this->newLine();
-        $this->line('<fg=green>'.json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).'</>', 'verbatim');
-        $this->newLine();
-        $this->comment('💡 Add this configuration to your MCP client configuration file.');
+
+        $this->table([], [[
+            json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
+        ]]);
 
         $this->newLine();
+        $this->newLine();
+
         $this->additionalHttpSetupMessages();
     }
 
     private function additionalHttpSetupMessages(): void
     {
-        $this->comment('🔧 Additional Setup Required: 🚨🚨🚨');
+        $this->comment('🚨🚨🚨 🔧 Additional Setup Required: 🚨🚨🚨');
         $this->newLine();
 
         $this->line('1. Enable SSE in your .env file: LOOP_SSE_ENABLED=true');
