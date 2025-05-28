@@ -4,9 +4,9 @@ namespace Kirschbaum\Loop\Tools\Models;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
+use Kirschbaum\Loop\Concerns\LogsMessages;
 use Kirschbaum\Loop\Concerns\Makeable;
 use Kirschbaum\Loop\Contracts\Tool;
 use Prism\Prism\Schema\StringSchema;
@@ -15,6 +15,7 @@ use Throwable;
 
 class CreateModelFactoryTool implements Tool
 {
+    use LogsMessages;
     use Makeable;
 
     // Placeholder for the next tool
@@ -81,11 +82,11 @@ class CreateModelFactoryTool implements Tool
                         "IDs: [{$ids}]"
                     );
                 } catch (InvalidArgumentException $e) {
-                    Log::error("Factory creation error for {$factoryClass}: ".$e->getMessage());
+                    $this->log("Factory creation error for {$factoryClass}: ".$e->getMessage(), level: 'error');
 
                     return "Error: Invalid arguments provided for factory {$factoryClass}. Check attribute names and types. Details: ".$e->getMessage();
                 } catch (Throwable $e) {
-                    Log::error("Factory creation failed for {$factoryClass}: ".$e->getMessage(), ['exception' => $e]);
+                    $this->log("Factory creation failed for {$factoryClass}: ".$e->getMessage(), ['exception' => $e], level: 'error');
 
                     return "Error: Failed to {$action} models using factory {$factoryClass}. Details: ".$e->getMessage();
                 }

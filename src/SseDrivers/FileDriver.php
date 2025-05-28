@@ -3,11 +3,13 @@
 namespace Kirschbaum\Loop\SseDrivers;
 
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Log;
+use Kirschbaum\Loop\Concerns\LogsMessages;
 use Kirschbaum\Loop\Contracts\SseDriverInterface;
 
 class FileDriver implements SseDriverInterface
 {
+    use LogsMessages;
+
     /**
      * Base directory for storing SSE files
      */
@@ -77,11 +79,11 @@ class FileDriver implements SseDriverInterface
             $messageFile = $this->getMessageFilePath($sessionId);
             File::put($messageFile, json_encode([]) ?: '[]');
 
-            Log::debug("SSE session registered: {$sessionId}");
+            $this->log("SSE session registered: {$sessionId}", level: 'debug');
 
             return true;
         } catch (\Exception $e) {
-            Log::error("Failed to register SSE session: {$e->getMessage()}");
+            $this->log("Failed to register SSE session: {$e->getMessage()}", level: 'error');
 
             return false;
         }
@@ -114,7 +116,7 @@ class FileDriver implements SseDriverInterface
 
             return true;
         } catch (\Exception $e) {
-            Log::error("Error checking session existence: {$e->getMessage()}");
+            $this->log("Error checking session existence: {$e->getMessage()}", level: 'error');
 
             return false;
         }
@@ -126,7 +128,7 @@ class FileDriver implements SseDriverInterface
     public function sendMessage(string $sessionId, array $data): bool
     {
         if (! $this->sessionExists($sessionId)) {
-            Log::warning("Attempted to send message to non-existent session: {$sessionId}");
+            $this->log("Attempted to send message to non-existent session: {$sessionId}", level: 'warning');
 
             return false;
         }
@@ -159,16 +161,16 @@ class FileDriver implements SseDriverInterface
                 fwrite($fp, json_encode($messages) ?: '[]');
                 flock($fp, LOCK_UN);
 
-                Log::debug("Message sent to session {$sessionId}");
+                $this->log("Message sent to session {$sessionId}", level: 'debug');
 
                 return true;
             } else {
-                Log::error("Could not acquire lock for message file: {$sessionId}");
+                $this->log("Could not acquire lock for message file: {$sessionId}", level: 'error');
 
                 return false;
             }
         } catch (\Exception $e) {
-            Log::error("Error sending message: {$e->getMessage()}");
+            $this->log("Error sending message: {$e->getMessage()}", level: 'error');
 
             return false;
         } finally {
@@ -235,7 +237,7 @@ class FileDriver implements SseDriverInterface
             return $newMessages;
 
         } catch (\Exception $e) {
-            Log::error("Error getting messages: {$e->getMessage()}");
+            $this->log("Error getting messages: {$e->getMessage()}", level: 'error');
 
             return [];
         }
@@ -258,11 +260,11 @@ class FileDriver implements SseDriverInterface
                 File::delete($messageFile);
             }
 
-            Log::debug("SSE session removed: {$sessionId}");
+            $this->log("SSE session removed: {$sessionId}", level: 'debug');
 
             return true;
         } catch (\Exception $e) {
-            Log::error("Failed to remove SSE session: {$e->getMessage()}");
+            $this->log("Failed to remove SSE session: {$e->getMessage()}", level: 'error');
 
             return false;
         }
@@ -286,7 +288,7 @@ class FileDriver implements SseDriverInterface
 
             return $sessions;
         } catch (\Exception $e) {
-            Log::error("Error getting active sessions: {$e->getMessage()}");
+            $this->log("Error getting active sessions: {$e->getMessage()}", level: 'error');
 
             return [];
         }

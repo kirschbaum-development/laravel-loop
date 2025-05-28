@@ -4,6 +4,7 @@ namespace Kirschbaum\Loop;
 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Kirschbaum\Loop\Concerns\LogsMessages;
 use Kirschbaum\Loop\Enums\ErrorCode;
 use Kirschbaum\Loop\Enums\MessageType;
 use Kirschbaum\Loop\Exceptions\LoopMcpException;
@@ -12,6 +13,8 @@ use Prism\Prism\Tool;
 
 class McpHandler
 {
+    use LogsMessages;
+
     public const LATEST_PROTOCOL_VERSION = '2024-11-05';
 
     public const SUPPORTED_PROTOCOL_VERSIONS = [
@@ -130,11 +133,11 @@ class McpHandler
                 ],
             ];
         } catch (PrismException $e) {
-            Log::error("Error calling tool {$name}: {$e->getMessage()}", [
+            $this->log("Error calling tool {$name}: {$e->getMessage()}", [
                 'arguments' => $arguments,
                 'trace' => $e->getTrace(),
                 'exception' => $e->getPrevious()?->getMessage(),
-            ]);
+            ], level: 'error');
 
             return [
                 'content' => [
@@ -146,10 +149,10 @@ class McpHandler
                 'isError' => true,
             ];
         } catch (\Exception $e) {
-            Log::error("Error calling tool {$name}: {$e->getMessage()}", [
+            $this->log("Error calling tool {$name}: {$e->getMessage()}", [
                 'exception' => $e,
                 'arguments' => $arguments,
-            ]);
+            ], level: 'error');
 
             return [
                 'content' => [
@@ -273,10 +276,11 @@ class McpHandler
         } catch (LoopMcpException $e) {
             throw $e;
         } catch (\Exception $e) {
-            Log::error(
-                "Error processing message: {$e->getMessage()}",
-                ['exception' => $e, 'method' => $method, 'params' => $params]
-            );
+            $this->log("Error processing message: {$e->getMessage()}", [
+                'exception' => $e,
+                'method' => $method,
+                'params' => $params,
+            ], level: 'error');
 
             throw new LoopMcpException($e->getMessage());
         }

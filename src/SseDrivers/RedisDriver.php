@@ -2,12 +2,14 @@
 
 namespace Kirschbaum\Loop\SseDrivers;
 
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
+use Kirschbaum\Loop\Concerns\LogsMessages;
 use Kirschbaum\Loop\Contracts\SseDriverInterface;
 
 class RedisDriver implements SseDriverInterface
 {
+    use LogsMessages;
+
     /**
      * Redis key prefix for SSE data
      */
@@ -58,11 +60,11 @@ class RedisDriver implements SseDriverInterface
             $result = Redis::connection($this->connection)->hmset($sessionKey, $sessionData);
             Redis::connection($this->connection)->expire($sessionKey, $this->sessionTtl);
 
-            Log::debug("SSE session registered: {$sessionId}");
+            $this->log("SSE session registered: {$sessionId}", level: 'debug');
 
             return (bool) $result;
         } catch (\Exception $e) {
-            Log::error("Failed to register SSE session: {$e->getMessage()}");
+            $this->log("Failed to register SSE session: {$e->getMessage()}", level: 'error');
 
             return false;
         }
@@ -99,7 +101,7 @@ class RedisDriver implements SseDriverInterface
 
             return true;
         } catch (\Exception $e) {
-            Log::error("Error checking session existence: {$e->getMessage()}");
+            $this->log("Error checking session existence: {$e->getMessage()}", level: 'error');
 
             return false;
         }
@@ -111,7 +113,7 @@ class RedisDriver implements SseDriverInterface
     public function sendMessage(string $sessionId, array $data): bool
     {
         if (! $this->sessionExists($sessionId)) {
-            Log::warning("Attempted to send message to non-existent session: {$sessionId}");
+            $this->log("Attempted to send message to non-existent session: {$sessionId}", level: 'warning');
 
             return false;
         }
@@ -138,11 +140,11 @@ class RedisDriver implements SseDriverInterface
             // Ensure the messages list expires at the same time as the session
             Redis::connection($this->connection)->expire($messagesKey, $this->sessionTtl);
 
-            Log::debug("Message sent to session {$sessionId}");
+            $this->log("Message sent to session {$sessionId}", level: 'debug');
 
             return is_int($result) && $result > 0;
         } catch (\Exception $e) {
-            Log::error("Error sending message: {$e->getMessage()}");
+            $this->log("Error sending message: {$e->getMessage()}", level: 'error');
 
             return false;
         }
@@ -207,7 +209,7 @@ class RedisDriver implements SseDriverInterface
                 return $message;
             })->all();
         } catch (\Exception $e) {
-            Log::error("Error getting messages: {$e->getMessage()}");
+            $this->log("Error getting messages: {$e->getMessage()}", level: 'error');
 
             return [];
         }
@@ -224,11 +226,11 @@ class RedisDriver implements SseDriverInterface
 
             $result = Redis::connection($this->connection)->del($sessionKey, $messagesKey);
 
-            Log::debug("SSE session removed: {$sessionId}");
+            $this->log("SSE session removed: {$sessionId}", level: 'debug');
 
             return is_int($result) && $result > 0;
         } catch (\Exception $e) {
-            Log::error("Failed to remove SSE session: {$e->getMessage()}");
+            $this->log("Failed to remove SSE session: {$e->getMessage()}", level: 'error');
 
             return false;
         }
@@ -261,7 +263,7 @@ class RedisDriver implements SseDriverInterface
 
             return $sessions;
         } catch (\Exception $e) {
-            Log::error("Error getting active sessions: {$e->getMessage()}");
+            $this->log("Error getting active sessions: {$e->getMessage()}", level: 'error');
 
             return [];
         }

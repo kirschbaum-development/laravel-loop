@@ -73,7 +73,6 @@ class DescribeModelFactoryTool implements Tool
                             'methods' => $methods,
                         ];
                     } catch (BindingResolutionException|\ReflectionException $e) {
-                        // Could not reflect or instantiate, log and skip
                         Log::warning("Could not reflect or instantiate factory {$className}: {$e->getMessage()}");
 
                         continue;

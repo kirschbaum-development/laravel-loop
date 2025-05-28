@@ -2,10 +2,12 @@
 
 namespace Kirschbaum\Loop\Services;
 
-use Illuminate\Support\Facades\Log;
+use Kirschbaum\Loop\Concerns\LogsMessages;
 
 class SseSessionManager
 {
+    use LogsMessages;
+
     /**
      * Store active SSE client IDs
      *
@@ -24,7 +26,8 @@ class SseSessionManager
     {
         $this->activeClients[$clientId] = true;
         $this->driverManager->driver()->registerSession($clientId);
-        Log::debug("SSE connection registered for client: {$clientId}");
+
+        $this->log("SSE connection registered for client: {$clientId}", level: 'debug');
     }
 
     /**
@@ -35,7 +38,8 @@ class SseSessionManager
         if (isset($this->activeClients[$clientId])) {
             unset($this->activeClients[$clientId]);
             $this->driverManager->driver()->removeSession($clientId);
-            Log::debug("SSE connection removed for client: {$clientId}");
+
+            $this->log("SSE connection removed for client: {$clientId}", level: 'debug');
         }
     }
 

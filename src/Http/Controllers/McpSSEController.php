@@ -5,7 +5,7 @@ namespace Kirschbaum\Loop\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\Log;
+use Kirschbaum\Loop\Concerns\LogsMessages;
 use Kirschbaum\Loop\McpHandler;
 use Kirschbaum\Loop\Services\SseService;
 use Kirschbaum\Loop\Services\SseSessionManager;
@@ -13,6 +13,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class McpSSEController extends Controller
 {
+    use LogsMessages;
+
     public function __construct(
         protected McpHandler $mcpHandler,
         protected SseService $sse,
@@ -92,7 +94,7 @@ class McpSSEController extends Controller
             $success = $this->sessionManager->sendToClient((string) $sessionId, $response);
 
             if (! $success) {
-                Log::warning("Failed to store message for client: {$sessionId}");
+                $this->log("Failed to store message for client: {$sessionId}", level: 'warning');
             }
 
             return response()->json([
@@ -100,11 +102,11 @@ class McpSSEController extends Controller
                 'message' => 'Request received and being processed',
             ]);
         } catch (\Exception $e) {
-            Log::error("Error processing MCP message: {$e->getMessage()}", [
+            $this->log("Error processing MCP message: {$e->getMessage()}", [
                 'sessionId' => $sessionId,
                 'request' => $requestData,
                 'exception' => $e,
-            ]);
+            ], level: 'error');
 
             $errorResponse = [
                 'jsonrpc' => '2.0',
