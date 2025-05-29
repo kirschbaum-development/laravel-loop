@@ -8,7 +8,7 @@
 
 Laravel Loop is a powerful Model Context Protocol (MCP) server designed specifically for Laravel applications. It connects your Laravel application with AI assistants using the MCP protocol.
 
-Laravel Loop uses [Prism](https://github.com/prism-ai/prism) behind the scenes to build the tools.
+Laravel Loop uses [Prism](https://github.com/prism-php/prism) behind the scenes to build the tools.
 
 > [!IMPORTANT]
 > Laravel Loop and its pre-built tools are still in development and this is a beta version.
