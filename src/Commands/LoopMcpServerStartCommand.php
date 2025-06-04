@@ -2,7 +2,6 @@
 
 namespace Kirschbaum\Loop\Commands;
 
-use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Auth;
 use Kirschbaum\Loop\Enums\ErrorCode;
