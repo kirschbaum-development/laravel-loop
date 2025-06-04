@@ -87,6 +87,8 @@ class LoopMcpConfigCommand extends Command
 
         if ($provider === Providers::ClaudeCode) {
             $this->generateClaudeCodeCommand($projectPath, $userId, $userModel);
+        } elseif ($provider === Providers::Cursor) {
+            $this->generateCursorDeeplink($projectPath, $userId, $userModel);
         } else {
             $this->generateJsonConfig($projectPath, $userId, $userModel);
         }
@@ -108,6 +110,8 @@ class LoopMcpConfigCommand extends Command
 
         if ($provider === Providers::ClaudeCode) {
             $this->generateClaudeCodeHttpConfig($baseUrl, $ssePath);
+        } elseif ($provider === Providers::Cursor) {
+            $this->generateCursorHttpDeeplink($baseUrl, $ssePath);
         } else {
             $this->generateJsonHttpConfig($provider, $baseUrl, $ssePath);
         }
@@ -131,6 +135,42 @@ class LoopMcpConfigCommand extends Command
 
         $this->newLine();
         $this->comment('💡 Copy and paste this command in your terminal to add the MCP server to Claude Code.');
+    }
+
+    private function generateCursorDeeplink(string $projectPath, ?string $userId, ?string $userModel): void
+    {
+        $args = [];
+
+        if ($userId) {
+            $args[] = "--user-id={$userId}";
+            if ($userModel && $userModel !== 'App\\Models\\User') {
+                $args[] = "--user-model={$userModel}";
+            }
+        }
+
+        $config = [
+            'command' => "php {$projectPath}/artisan loop:mcp:start",
+            'args' => $args,
+        ];
+
+        $configJson = json_encode($config, JSON_UNESCAPED_SLASHES);
+        $configBase64 = base64_encode($configJson);
+        $deeplink = "cursor://anysphere.cursor-deeplink/mcp/install?name=laravel-loop-mcp&config={$configBase64}";
+
+        $this->info('🎯🎯🎯 Cursor Deeplink: 🎯🎯🎯');
+        $this->newLine();
+
+        $this->table([], [[$deeplink]]);
+
+        $this->newLine();
+        $this->comment('💡 Click on the link above or copy and paste it into your browser to install the MCP server in Cursor.');
+        $this->newLine();
+        $this->comment('📋 Alternatively, you can copy the following JSON configuration manually:');
+        $this->newLine();
+
+        $this->table([], [[
+            json_encode(['laravel-loop-mcp' => $config], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
+        ]]);
     }
 
     private function generateJsonConfig(string $projectPath, ?string $userId, ?string $userModel): void
@@ -159,9 +199,7 @@ class LoopMcpConfigCommand extends Command
         $this->comment('🎯🎯🎯 Please copy the following JSON configuration to your MCP client configuration file. 🎯🎯🎯');
         $this->newLine();
 
-        $this->table([], [[
-            json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
-        ]]);
+        $this->line(json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
         $this->newLine();
         $this->newLine();
@@ -185,6 +223,48 @@ class LoopMcpConfigCommand extends Command
 
         $this->newLine();
         $this->comment('💡 Copy and paste this command in your terminal to add the MCP server to Claude Code.');
+
+        $this->newLine();
+        $this->additionalHttpSetupMessages();
+    }
+
+    private function generateCursorHttpDeeplink(string $baseUrl, string $ssePath): void
+    {
+        $headers = $this->collectHeaders();
+
+        $config = [
+            'transport' => 'sse',
+            'url' => rtrim($baseUrl, '/').$ssePath,
+        ];
+
+        if (! empty($headers)) {
+            $config['headers'] = [];
+            foreach ($headers as $header) {
+                $parts = explode(':', $header, 2);
+                if (count($parts) === 2) {
+                    $config['headers'][trim($parts[0])] = trim($parts[1]);
+                }
+            }
+        }
+
+        $configJson = json_encode($config, JSON_UNESCAPED_SLASHES);
+        $configBase64 = base64_encode($configJson);
+        $deeplink = "cursor://anysphere.cursor-deeplink/mcp/install?name=laravel-loop-mcp&config={$configBase64}";
+
+        $this->comment('🎯🎯🎯 Cursor HTTP + SSE Deeplink Configuration: 🎯🎯🎯');
+        $this->newLine();
+
+        $this->table([], [[$deeplink]]);
+
+        $this->newLine();
+        $this->comment('💡 Click on the link above or copy and paste it into your browser to install the MCP server in Cursor.');
+        $this->newLine();
+        $this->comment('📋 Alternatively, you can copy the following JSON configuration manually:');
+        $this->newLine();
+
+        $this->table([], [[
+            json_encode(['laravel-loop-mcp' => $config], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
+        ]]);
 
         $this->newLine();
         $this->additionalHttpSetupMessages();
@@ -273,9 +353,7 @@ class LoopMcpConfigCommand extends Command
         $this->comment('🎯🎯🎯 Please copy the following JSON configuration to your MCP client configuration file. 🎯🎯🎯');
         $this->newLine();
 
-        $this->table([], [[
-            json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
-        ]]);
+        $this->line(json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
         $this->newLine();
         $this->additionalHttpSetupMessages();
@@ -300,9 +378,7 @@ class LoopMcpConfigCommand extends Command
         $this->comment('🎯🎯🎯 Please copy the following JSON configuration to your MCP client configuration file. 🎯🎯🎯');
         $this->newLine();
 
-        $this->table([], [[
-            json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
-        ]]);
+        $this->line(json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
         $this->newLine();
         $this->newLine();
