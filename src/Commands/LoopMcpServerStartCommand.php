@@ -86,6 +86,8 @@ class LoopMcpServerStartCommand extends Command
                     );
 
                     $stdout->write(json_encode($response).PHP_EOL);
+
+                    report($e);
                 }
             }
 
