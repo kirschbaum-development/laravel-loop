@@ -57,10 +57,11 @@ class LoopMcpServerStartCommand extends Command
             }
 
             foreach (explode("\n", $data) as $line) {
-                if (!json_validate($line)) {
+                if (! json_validate($line)) {
                     if ($this->option('debug')) {
-                        $this->comment('Invalid line: '. $line);
+                        $this->comment('Invalid line: '.$line);
                     }
+
                     continue;
                 }
 
