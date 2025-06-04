@@ -2,6 +2,7 @@
 
 namespace Kirschbaum\Loop\Commands;
 
+use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Auth;
 use Kirschbaum\Loop\Enums\ErrorCode;
@@ -24,75 +25,30 @@ class LoopMcpServerStartCommand extends Command
 
     protected $description = 'Run the Laravel Loop MCP server';
 
+    protected McpHandler $mcpHandler;
+
+    protected ReadableResourceStream $stdin;
+
+    protected WritableResourceStream $stdout;
+
     public function handle(McpHandler $mcpHandler): int
     {
+        $this->mcpHandler = $mcpHandler;
+
         if ($this->option('debug')) {
             $this->debug('Starting Laravel Loop MCP server (STDIO transport)');
         }
 
         if ($this->option('user-id')) {
-            /** @var string|null */
-            $authGuard = $this->option('auth-guard') ?? config('auth.defaults.guard');
-            $userModel = $this->option('user-model') ?? 'App\\Models\\User';
-            $user = $userModel::find($this->option('user-id'));
-
-            if (! $user) {
-                $this->error(sprintf('User with ID %s not found. Model used: %s', $this->option('user-id'), $userModel));
-
-                return Command::FAILURE;
-            }
-
-            Auth::guard($authGuard)->login($user);
-
-            if ($this->option('debug')) {
-                $this->debug(sprintf('Authenticated with user ID %s', $this->option('user-id')));
-            }
+            $this->authenticateUser();
         }
 
         $loop = Loop::get();
-        $stdin = new ReadableResourceStream(STDIN, $loop);
-        $stdout = new WritableResourceStream(STDOUT, $loop);
+        $this->stdin = new ReadableResourceStream(STDIN, $loop);
+        $this->stdout = new WritableResourceStream(STDOUT, $loop);
 
-        $stdin->on('data', function ($data) use ($stdout, $mcpHandler) {
-            if ($this->option('debug')) {
-                $this->debug('Received data: '.$data);
-            }
-
-            foreach (explode("\n", trim($data)) as $line) {
-                if (! json_validate($line)) {
-                    if ($this->option('debug')) {
-                        $this->debug('Invalid line: '.$line);
-                    }
-
-                    continue;
-                }
-
-                try {
-                    $message = (array) json_decode($line, true);
-                    $response = $mcpHandler->handle($message);
-
-                    if ($this->option('debug')) {
-                        $this->debug('Response: '.json_encode($response));
-                    }
-
-                    if (isset($message['id'])) {
-                        $stdout->write(json_encode($response).PHP_EOL);
-                    }
-                } catch (\Throwable $e) {
-                    $this->debug('Error processing message: '.$e->getMessage());
-
-                    $response = $mcpHandler->formatErrorResponse(
-                        $message['id'] ?? '',
-                        ErrorCode::INTERNAL_ERROR,
-                        $e->getMessage()
-                    );
-
-                    $stdout->write(json_encode($response).PHP_EOL);
-
-                    report($e);
-                }
-            }
-
+        $this->stdin->on('data', function ($data) {
+            $this->processData($data);
         });
 
         if ($this->option('debug')) {
@@ -133,6 +89,66 @@ class LoopMcpServerStartCommand extends Command
         $this->info('Laravel Loop MCP server stopped.');
 
         return Command::SUCCESS;
+    }
+
+    protected function processData(string $data): void
+    {
+        if ($this->option('debug')) {
+            $this->debug('Received data: '.$data);
+        }
+
+        foreach (explode("\n", trim($data)) as $line) {
+            if (! json_validate($line)) {
+                if ($this->option('debug')) {
+                    $this->debug('Invalid line: '.$line);
+                }
+
+                continue;
+            }
+
+            try {
+                $message = (array) json_decode($line, true);
+                $response = $this->mcpHandler->handle($message);
+
+                if ($this->option('debug')) {
+                    $this->debug('Response: '.json_encode($response));
+                }
+
+                if (isset($message['id'])) {
+                    $this->stdout->write(json_encode($response).PHP_EOL);
+                }
+            } catch (\Throwable $e) {
+                $this->debug('Error processing message: '.$e->getMessage());
+
+                $response = $this->mcpHandler->formatErrorResponse(
+                    $message['id'] ?? '',
+                    ErrorCode::INTERNAL_ERROR,
+                    $e->getMessage()
+                );
+
+                $this->stdout->write(json_encode($response).PHP_EOL);
+
+                report($e);
+            }
+        }
+    }
+
+    protected function authenticateUser(): void
+    {
+        /** @var string|null */
+        $authGuard = $this->option('auth-guard') ?? config('auth.defaults.guard');
+        $userModel = $this->option('user-model') ?? 'App\\Models\\User';
+        $user = $userModel::find($this->option('user-id'));
+
+        if (! $user) {
+            throw new Exception(sprintf('User with ID %s not found. Model used: %s', $this->option('user-id'), $userModel));
+        }
+
+        Auth::guard($authGuard)->login($user);
+
+        if ($this->option('debug')) {
+            $this->debug(sprintf('Authenticated with user ID %s', $this->option('user-id')));
+        }
     }
 
     protected function debug(string $message): void
