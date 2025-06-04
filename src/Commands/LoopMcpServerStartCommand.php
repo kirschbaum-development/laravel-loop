@@ -27,7 +27,7 @@ class LoopMcpServerStartCommand extends Command
     public function handle(McpHandler $mcpHandler): int
     {
         if ($this->option('debug')) {
-            $this->info('Starting Laravel Loop MCP server (STDIO transport)');
+            $this->debug('Starting Laravel Loop MCP server (STDIO transport)');
         }
 
         if ($this->option('user-id')) {
@@ -43,7 +43,7 @@ class LoopMcpServerStartCommand extends Command
             Auth::login($user);
 
             if ($this->option('debug')) {
-                $this->info(sprintf('Authenticated with user ID %s', $this->option('user-id')));
+                $this->debug(sprintf('Authenticated with user ID %s', $this->option('user-id')));
             }
         }
 
@@ -53,13 +53,13 @@ class LoopMcpServerStartCommand extends Command
 
         $stdin->on('data', function ($data) use ($stdout, $mcpHandler) {
             if ($this->option('debug')) {
-                $this->comment('Received data: '.$data);
+                $this->debug('Received data: '.$data);
             }
 
             foreach (explode("\n", $data) as $line) {
                 if (! json_validate($line)) {
                     if ($this->option('debug')) {
-                        $this->comment('Invalid line: '.$line);
+                        $this->debug('Invalid line: '.$line);
                     }
 
                     continue;
@@ -70,14 +70,14 @@ class LoopMcpServerStartCommand extends Command
                     $response = $mcpHandler->handle($message);
 
                     if ($this->option('debug')) {
-                        $this->comment('Response: '.json_encode($response));
+                        $this->debug('Response: '.json_encode($response));
                     }
 
                     if (isset($message['id'])) {
                         $stdout->write(json_encode($response).PHP_EOL);
                     }
-                } catch (Exception $e) {
-                    $this->error('Error processing message: '.$e->getMessage());
+                } catch (\Throwable $e) {
+                    $this->debug('Error processing message: '.$e->getMessage());
 
                     $response = $mcpHandler->formatErrorResponse(
                         $message['id'] ?? '',
@@ -92,7 +92,7 @@ class LoopMcpServerStartCommand extends Command
         });
 
         if ($this->option('debug')) {
-            $this->info('Laravel Loop MCP server running. Press Ctrl+C or send SIGTERM to stop.');
+            $this->debug('Laravel Loop MCP server running. Press Ctrl+C or send SIGTERM to stop.');
         }
 
         // Add signal handlers if pcntl is available
@@ -101,7 +101,7 @@ class LoopMcpServerStartCommand extends Command
                 info('Received signal: '.$signal.'. Shutting down...');
 
                 if ($this->option('debug')) {
-                    $this->info('Received signal: '.$signal.'. Shutting down...');
+                    $this->debug('Received signal: '.$signal.'. Shutting down...');
                 }
 
                 $loop->stop();
@@ -129,5 +129,10 @@ class LoopMcpServerStartCommand extends Command
         $this->info('Laravel Loop MCP server stopped.');
 
         return Command::SUCCESS;
+    }
+
+    protected function debug($message)
+    {
+        $this->getOutput()->getOutput()->getErrorOutput()->writeln($message);
     }
 }
