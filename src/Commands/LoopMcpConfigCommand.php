@@ -154,18 +154,21 @@ class LoopMcpConfigCommand extends Command
         ];
 
         $configJson = json_encode($config, JSON_UNESCAPED_SLASHES);
-        $configBase64 = base64_encode($configJson);
-        $deeplink = "cursor://anysphere.cursor-deeplink/mcp/install?name=laravel-loop-mcp&config={$configBase64}";
+        if ($configJson) {
+            $configBase64 = base64_encode($configJson);
+            $deeplink = "cursor://anysphere.cursor-deeplink/mcp/install?name=laravel-loop-mcp&config={$configBase64}";
+            $this->info('🎯🎯🎯 Cursor Deeplink: 🎯🎯🎯');
 
-        $this->info('🎯🎯🎯 Cursor Deeplink: 🎯🎯🎯');
-        $this->newLine();
+            $this->newLine();
 
-        $this->table([], [[$deeplink]]);
+            $this->table([], [[$deeplink]]);
+
+            $this->newLine();
+            $this->comment('💡 Click on the link above or copy and paste it into your browser to install the MCP server in Cursor.');
+        }
 
         $this->newLine();
-        $this->comment('💡 Click on the link above or copy and paste it into your browser to install the MCP server in Cursor.');
-        $this->newLine();
-        $this->comment('📋 Alternatively, you can copy the following JSON configuration manually:');
+        $this->comment('📋 You can copy the following JSON configuration:');
         $this->newLine();
 
         $this->table([], [[
@@ -199,7 +202,9 @@ class LoopMcpConfigCommand extends Command
         $this->comment('🎯🎯🎯 Please copy the following JSON configuration to your MCP client configuration file. 🎯🎯🎯');
         $this->newLine();
 
-        $this->line(json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        $this->table([], [[
+            json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
+        ]]);
 
         $this->newLine();
         $this->newLine();
@@ -248,18 +253,21 @@ class LoopMcpConfigCommand extends Command
         }
 
         $configJson = json_encode($config, JSON_UNESCAPED_SLASHES);
-        $configBase64 = base64_encode($configJson);
-        $deeplink = "cursor://anysphere.cursor-deeplink/mcp/install?name=laravel-loop-mcp&config={$configBase64}";
+        if ($configJson) {
+            $configBase64 = base64_encode($configJson);
+            $deeplink = "cursor://anysphere.cursor-deeplink/mcp/install?name=laravel-loop-mcp&config={$configBase64}";
 
-        $this->comment('🎯🎯🎯 Cursor HTTP + SSE Deeplink Configuration: 🎯🎯🎯');
-        $this->newLine();
+            $this->comment('🎯🎯🎯 Cursor HTTP + SSE Deeplink Configuration: 🎯🎯🎯');
+            $this->newLine();
 
-        $this->table([], [[$deeplink]]);
+            $this->table([], [[$deeplink]]);
+
+            $this->newLine();
+            $this->comment('💡 Click on the link above or copy and paste it into your browser to install the MCP server in Cursor.');
+        }
 
         $this->newLine();
-        $this->comment('💡 Click on the link above or copy and paste it into your browser to install the MCP server in Cursor.');
-        $this->newLine();
-        $this->comment('📋 Alternatively, you can copy the following JSON configuration manually:');
+        $this->comment('📋 You can copy the following JSON configuration:');
         $this->newLine();
 
         $this->table([], [[
@@ -353,7 +361,9 @@ class LoopMcpConfigCommand extends Command
         $this->comment('🎯🎯🎯 Please copy the following JSON configuration to your MCP client configuration file. 🎯🎯🎯');
         $this->newLine();
 
-        $this->line(json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        $this->table([], [[
+            json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
+        ]]);
 
         $this->newLine();
         $this->additionalHttpSetupMessages();
@@ -378,7 +388,9 @@ class LoopMcpConfigCommand extends Command
         $this->comment('🎯🎯🎯 Please copy the following JSON configuration to your MCP client configuration file. 🎯🎯🎯');
         $this->newLine();
 
-        $this->line(json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        $this->table([], [[
+            json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
+        ]]);
 
         $this->newLine();
         $this->newLine();
