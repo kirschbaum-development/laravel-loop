@@ -56,28 +56,38 @@ class LoopMcpServerStartCommand extends Command
                 $this->comment('Received data: '.$data);
             }
 
-            try {
-                $message = (array) json_decode($data, true);
-                $response = $mcpHandler->handle($message);
-
-                if ($this->option('debug')) {
-                    $this->comment('Response: '.json_encode($response));
+            foreach (explode("\n", $data) as $line) {
+                if (!json_validate($line)) {
+                    if ($this->option('debug')) {
+                        $this->comment('Invalid line: '. $line);
+                    }
+                    continue;
                 }
 
-                if (isset($message['id'])) {
+                try {
+                    $message = (array) json_decode($line, true);
+                    $response = $mcpHandler->handle($message);
+
+                    if ($this->option('debug')) {
+                        $this->comment('Response: '.json_encode($response));
+                    }
+
+                    if (isset($message['id'])) {
+                        $stdout->write(json_encode($response).PHP_EOL);
+                    }
+                } catch (Exception $e) {
+                    $this->error('Error processing message: '.$e->getMessage());
+
+                    $response = $mcpHandler->formatErrorResponse(
+                        $message['id'] ?? '',
+                        ErrorCode::INTERNAL_ERROR,
+                        $e->getMessage()
+                    );
+
                     $stdout->write(json_encode($response).PHP_EOL);
                 }
-            } catch (Exception $e) {
-                $this->error('Error processing message: '.$e->getMessage());
-
-                $response = $mcpHandler->formatErrorResponse(
-                    $message['id'] ?? '',
-                    ErrorCode::INTERNAL_ERROR,
-                    $e->getMessage()
-                );
-
-                $stdout->write(json_encode($response).PHP_EOL);
             }
+
         });
 
         if ($this->option('debug')) {
