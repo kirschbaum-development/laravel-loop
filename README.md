@@ -146,7 +146,7 @@ php artisan loop:mcp:generate-config
 To run the MCP server using STDIO, we provide the following artisan command:
 
 ```bash
-php artisan loop:mcp:start [--user-id=1] [--user-model=App\Models\User] [--debug]
+php artisan loop:mcp:start [--user-id=1 [--user-model=] [--auth-guard=] [--debug]
 ```
 
 To connect Laravel Loop MCP server to Claude Code, for example, you can use the following command:

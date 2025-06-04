@@ -31,6 +31,7 @@ class LoopMcpServerStartCommand extends Command
         }
 
         if ($this->option('user-id')) {
+            /** @var string|null */
             $authGuard = $this->option('auth-guard') ?? config('auth.defaults.guard');
             $userModel = $this->option('user-model') ?? 'App\\Models\\User';
             $user = $userModel::find($this->option('user-id'));
@@ -134,8 +135,9 @@ class LoopMcpServerStartCommand extends Command
         return Command::SUCCESS;
     }
 
-    protected function debug($message)
+    protected function debug(string $message): void
     {
-        $this->getOutput()->getOutput()->getErrorOutput()->writeln($message);
+
+        $this->getOutput()->getOutput()->getErrorOutput()->writeln($message); // @phpstan-ignore method.notFound
     }
 }
