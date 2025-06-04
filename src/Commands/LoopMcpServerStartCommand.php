@@ -20,6 +20,7 @@ class LoopMcpServerStartCommand extends Command
     protected $signature = 'loop:mcp:start
                             {--user-id= : The user ID to authenticate the requests with}
                             {--user-model= : The model to use to authenticate the requests with}
+                            {--auth-guard= : The Auth guard to use to authenticate the requests with}
                             {--debug : Enable debug mode}';
 
     protected $description = 'Run the Laravel Loop MCP server';
@@ -31,6 +32,7 @@ class LoopMcpServerStartCommand extends Command
         }
 
         if ($this->option('user-id')) {
+            $authGuard = $this->option('auth-guard') ?? config('auth.defaults.guard');
             $userModel = $this->option('user-model') ?? 'App\\Models\\User';
             $user = $userModel::find($this->option('user-id'));
 
@@ -40,7 +42,7 @@ class LoopMcpServerStartCommand extends Command
                 return Command::FAILURE;
             }
 
-            Auth::login($user);
+            Auth::guard($authGuard)->login($user);
 
             if ($this->option('debug')) {
                 $this->info(sprintf('Authenticated with user ID %s', $this->option('user-id')));
