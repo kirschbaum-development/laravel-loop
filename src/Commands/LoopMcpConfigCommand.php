@@ -149,11 +149,16 @@ class LoopMcpConfigCommand extends Command
         }
 
         $config = [
-            'command' => "php {$projectPath}/artisan loop:mcp:start",
-            'args' => $args,
+            'command' => 'php',
+            'args' => [
+                "{$projectPath}/artisan",
+                'loop:mcp:start',
+                ...$args,
+            ],
         ];
 
         $configJson = json_encode($config, JSON_UNESCAPED_SLASHES);
+
         if ($configJson) {
             $configBase64 = base64_encode($configJson);
             $deeplink = "cursor://anysphere.cursor-deeplink/mcp/install?name=laravel-loop-mcp&config={$configBase64}";
