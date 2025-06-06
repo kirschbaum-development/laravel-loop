@@ -9,7 +9,8 @@ use Kirschbaum\Loop\Enums\Providers;
 class LoopMcpConfigCommand extends Command
 {
     protected $signature = 'loop:mcp:generate-config
-                            {--url= : The base URL of your application (optional, defaults to config("app.url"))}';
+                            {--url= : The base URL of your application (optional, defaults to config("app.url"))}
+                            {--php-binary-path= : The PHP binary path to (optional, defaults to `php`)}';
 
     protected $description = 'Generate MCP server configuration to configure Laravel Loop in your MCP client';
 
@@ -149,7 +150,7 @@ class LoopMcpConfigCommand extends Command
         }
 
         $config = [
-            'command' => 'php',
+            'command' => $this->getPhpBinary(),
             'args' => [
                 "{$projectPath}/artisan",
                 'loop:mcp:start',
@@ -198,7 +199,7 @@ class LoopMcpConfigCommand extends Command
         $config = [
             'mcpServers' => [
                 'laravel-loop-mcp' => [
-                    'command' => 'php',
+                    'command' => $this->getPhpBinary(),
                     'args' => $args,
                 ],
             ],
@@ -411,5 +412,14 @@ class LoopMcpConfigCommand extends Command
         $this->line('1. Enable SSE in your .env file: LOOP_SSE_ENABLED=true');
         $this->line('2. Configure an authentication middleware in config/loop.php');
         $this->line('3. Ensure your Laravel application is running and accessible through the configured base URL');
+    }
+
+    private function getPhpBinary(): string
+    {
+        if ($this->option('php-binary-path')) {
+            return (string) $this->option('php-binary-path');
+        }
+
+        return 'php';
     }
 }

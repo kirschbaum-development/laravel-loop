@@ -273,6 +273,14 @@ Please note that not all clients support direct SSE connections. For those situa
 
 If you get this error, it likely means there's some error happening in your application. Check your applicationlogs for more details.
 
+**Error: spawn php ENOENT**
+
+This can happen when your "php" binary is not in the PATH. This can be solved in a few ways:
+
+- Add the path to your `.bashrc` or `.zshrc` file. Sometimes it can be only in the `.zshrc` file but applications like Claude use `.bashrc`.
+- Use the full path of the PHP binary. You can get it by running `which php` in your terminal.
+    * This can be a good option to ensure you always use the proper version of PHP for a given project. If you use Herd, for example, your `php` will change depending on the selected version.
+
 **Make sure to check your application logs**
 
 If you are getting an unkown error, check your application logs for more details.

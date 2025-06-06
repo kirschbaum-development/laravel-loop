@@ -11,7 +11,7 @@ trait LogsMessages
      */
     public function log(string $message, array $context = [], string $level = 'info'): void
     {
-        if ($level !== 'error' && ! config()->boolean('loop.debug')) {
+        if ($level !== 'error' && ! config()->boolean('loop.debug', false)) {
             return;
         }
 
