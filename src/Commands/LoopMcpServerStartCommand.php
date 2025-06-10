@@ -2,9 +2,8 @@
 
 namespace Kirschbaum\Loop\Commands;
 
-use Exception;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Auth;
+use Kirschbaum\Loop\Commands\Concerns\AuthenticateUsers;
 use Kirschbaum\Loop\Enums\ErrorCode;
 use Kirschbaum\Loop\McpHandler;
 use React\EventLoop\Loop;
@@ -17,6 +16,8 @@ if (! function_exists('pcntl_signal')) {
 
 class LoopMcpServerStartCommand extends Command
 {
+    use AuthenticateUsers;
+
     protected $signature = 'loop:mcp:start
                             {--user-id= : The user ID to authenticate the requests with}
                             {--user-model= : The model to use to authenticate the requests with}
@@ -133,27 +134,8 @@ class LoopMcpServerStartCommand extends Command
         }
     }
 
-    protected function authenticateUser(): void
-    {
-        /** @var string|null */
-        $authGuard = $this->option('auth-guard') ?? config('auth.defaults.guard');
-        $userModel = $this->option('user-model') ?? 'App\\Models\\User';
-        $user = $userModel::find($this->option('user-id'));
-
-        if (! $user) {
-            throw new Exception(sprintf('User with ID %s not found. Model used: %s', $this->option('user-id'), $userModel));
-        }
-
-        Auth::guard($authGuard)->login($user);
-
-        if ($this->option('debug')) {
-            $this->debug(sprintf('Authenticated with user ID %s', $this->option('user-id')));
-        }
-    }
-
     protected function debug(string $message): void
     {
-
         $this->getOutput()->getOutput()->getErrorOutput()->writeln($message); // @phpstan-ignore method.notFound
     }
 }

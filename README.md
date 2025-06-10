@@ -281,6 +281,14 @@ This can happen when your "php" binary is not in the PATH. This can be solved in
 - Use the full path of the PHP binary. You can get it by running `which php` in your terminal.
     * This can be a good option to ensure you always use the proper version of PHP for a given project. If you use Herd, for example, your `php` will change depending on the selected version.
 
+**Manually call tools and verify output**
+
+Sometimes when building tools, you may be getting unexpected results and debugging from the MCP client can be difficult. You can manually call tools and verify the output by running the following command:
+
+```bash
+php artisan loop:mcp:call
+```
+
 **Make sure to check your application logs**
 
 If you are getting an unkown error, check your application logs for more details.
