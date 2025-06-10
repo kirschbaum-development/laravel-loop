@@ -2,6 +2,7 @@
 
 namespace Kirschbaum\Loop;
 
+use Kirschbaum\Loop\Commands\LoopMcpCallCommand;
 use Kirschbaum\Loop\Commands\LoopMcpConfigCommand;
 use Kirschbaum\Loop\Commands\LoopMcpServerStartCommand;
 use Kirschbaum\Loop\Services\SseDriverManager;
@@ -28,6 +29,7 @@ class LoopServiceProvider extends PackageServiceProvider
             ->hasCommands([
                 LoopMcpServerStartCommand::class,
                 LoopMcpConfigCommand::class,
+                LoopMcpCallCommand::class,
             ]);
     }
 
