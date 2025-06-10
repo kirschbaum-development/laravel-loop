@@ -34,7 +34,7 @@ class LoopMcpCallCommand extends Command
     /** @var array<string, mixed> */
     protected $lastToolParameters = [];
 
-    public function handle(McpHandler $mcpHandler): int
+    public function handle(McpHandler $mcpHandler): void
     {
         $this->mcpHandler = $mcpHandler;
 
@@ -50,7 +50,7 @@ class LoopMcpCallCommand extends Command
             if (! $toolName) {
                 $this->error('No tool selected. Exiting...');
 
-                return Command::FAILURE;
+                return;
             }
 
             if ($toolName === '_repeat_last_tool_call') {
@@ -103,8 +103,6 @@ class LoopMcpCallCommand extends Command
                 }
             }
         } while (true);
-
-        return Command::SUCCESS;
     }
 
     protected function getToolName(): ?string

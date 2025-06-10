@@ -136,10 +136,6 @@ class LoopMcpServerStartCommand extends Command
 
     protected function debug(string $message): void
     {
-
-        $this->getOutput()
-            ->getOutput()
-            ->getErrorOutput()
-            ->writeln($message); // @phpstan-ignore method.notFound
+        $this->getOutput()->getOutput()->getErrorOutput()->writeln($message); // @phpstan-ignore method.notFound
     }
 }
