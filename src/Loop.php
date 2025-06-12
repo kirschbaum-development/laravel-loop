@@ -4,7 +4,6 @@ namespace Kirschbaum\Loop;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
-use Kirschbaum\Loop\Collections\ToolCollection;
 use Kirschbaum\Loop\Contracts\Tool;
 use Kirschbaum\Loop\Contracts\Toolkit;
 use Prism\Prism\Enums\Provider;
@@ -16,14 +15,9 @@ use Prism\Prism\ValueObjects\Messages\UserMessage;
 
 class Loop
 {
-    protected ToolCollection $tools;
-
     protected string $context = '';
 
-    public function __construct()
-    {
-        $this->tools = new ToolCollection;
-    }
+    public function __construct(protected LoopTools $loopTools) {}
 
     public function setup(): void {}
 
@@ -36,16 +30,14 @@ class Loop
 
     public function tool(Tool $tool): static
     {
-        $this->tools->push($tool);
+        $this->loopTools->registerTool($tool);
 
         return $this;
     }
 
     public function toolkit(Toolkit $toolkit): static
     {
-        foreach ($toolkit->getTools() as $tool) {
-            $this->tool($tool);
-        }
+        $this->loopTools->registerToolkit($toolkit);
 
         return $this;
     }
@@ -99,13 +91,17 @@ class Loop
 
     public function getPrismTools(): Collection
     {
-        return $this->tools
+        return $this->loopTools
+            ->getTools()
             ->toBase()
             ->map(fn (Tool $tool) => $tool->build());
     }
 
     public function getPrismTool(string $name): PrismTool
     {
-        return $this->tools->getTool($name)->build();
+        return $this->loopTools
+            ->getTools()
+            ->getTool($name)
+            ->build();
     }
 }
