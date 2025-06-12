@@ -35,8 +35,12 @@ class LoopServiceProvider extends PackageServiceProvider
 
     public function packageBooted(): void
     {
+        $this->app->singleton(LoopTools::class, function () {
+            return new LoopTools;
+        });
+
         $this->app->scoped(Loop::class, function ($app) {
-            $loop = new Loop;
+            $loop = new Loop($app->make(LoopTools::class));
             $loop->setup();
 
             return $loop;
