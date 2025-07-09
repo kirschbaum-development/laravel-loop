@@ -26,7 +26,7 @@
         "spatie/laravel-package-tools": "^1.18",
         "illuminate/support": "^11.0|^12.0",
         "illuminate/database": "^11.0|^12.0",
-        "prism-php/prism": "^0.56.0",
+        "prism-php/prism": ">=v0.56.0 < v1.0",
         "react/event-loop": "^1.5",
         "react/stream": "^1.4"
     },
