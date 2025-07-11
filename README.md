@@ -129,6 +129,121 @@ class LaravelFactoriesToolkit implements Toolkit
 
 ***
 
+## Dynamic Tool Management
+
+Laravel Loop supports dynamic tool management, allowing you to add or remove MCP tools at runtime from anywhere in your Laravel application. This enables powerful features like:
+
+- Enabling/disabling tools based on user roles or permissions
+- Managing tools through administrative interfaces  
+- Dynamically adjusting available functionality based on application state
+- Providing temporary access to tools for maintenance or debugging
+
+### API Reference
+
+#### Adding Tools Dynamically
+
+```php
+// Add a tool at runtime
+Loop::addTool(new MyCustomTool());
+
+// Add multiple tools with method chaining
+Loop::addTool(new ToolOne())
+    ->addTool(new ToolTwo())
+    ->addTool(new ToolThree());
+```
+
+#### Removing Tools Dynamically
+
+```php
+// Remove a tool by name
+Loop::removeTool('my-custom-tool');
+
+// Remove multiple tools with method chaining
+Loop::removeTool('tool-one')
+    ->removeTool('tool-two')
+    ->removeTool('tool-three');
+```
+
+#### Clearing All Tools
+
+```php
+// Remove all registered tools and toolkits
+Loop::clear();
+```
+
+### Common Use Cases
+
+#### Feature Toggle via HTTP Controller
+
+```php
+// User enables integration in web UI
+public function enableStripeIntegration(Request $request)
+{
+    // Validate user permissions
+    $this->authorize('manage-integrations');
+    
+    // Add Stripe tools dynamically
+    Loop::addTool(StripeTool::make());
+    
+    // Update user settings
+    auth()->user()->update(['stripe_enabled' => true]);
+    
+    return response()->json(['message' => 'Stripe integration enabled']);
+}
+```
+
+#### Administrative Tool Management
+
+```php
+// Artisan command for bulk tool management
+public function handle()
+{
+    if ($this->option('disable-maintenance-tools')) {
+        Loop::removeTool('database-debug')
+            ->removeTool('cache-inspector')
+            ->removeTool('log-viewer');
+            
+        $this->info('Maintenance tools disabled');
+    }
+}
+```
+
+#### Permission-Based Tool Access
+
+```php
+// Middleware that adjusts available tools based on user role
+public function handle($request, Closure $next)
+{
+    if (auth()->user()->isAdmin()) {
+        Loop::addTool(CustomTool::make('admin-debug', 'Administrative debugging tool'))
+            ->addTool(CustomTool::make('system-monitor', 'System monitoring tool'));
+    }
+    
+    return $next($request);
+}
+```
+
+#### Conditional Tool Loading
+
+```php
+// In a service provider or middleware
+public function boot()
+{
+    // Add tools based on environment
+    if (app()->environment('local', 'staging')) {
+        Loop::addTool(CustomTool::make('debug-tool', 'Debug information tool'))
+            ->addTool(CustomTool::make('test-data-generator', 'Generate test data'));
+    }
+    
+    // Add tools based on feature flags
+    if (Feature::active('advanced-analytics')) {
+        Loop::addTool(CustomTool::make('analytics-tool', 'Advanced analytics tool'));
+    }
+}
+```
+
+***
+
 ## Connecting to the MCP server
 
 For this to be really useful, you need to connect your MCP client (Claude Code, Claude Desktop, Cursor, Windsurf, etc) to the Laravel LoopMCP server.

@@ -22,6 +22,36 @@ class Loop
         return $this;
     }
 
+    /**
+     * Add a tool dynamically to the registry
+     */
+    public function addTool(Tool $tool): static
+    {
+        $this->loopTools->addTool($tool);
+
+        return $this;
+    }
+
+    /**
+     * Remove a tool dynamically from the registry
+     */
+    public function removeTool(string $name): static
+    {
+        $this->loopTools->removeTool($name);
+
+        return $this;
+    }
+
+    /**
+     * Clear all registered tools and toolkits
+     */
+    public function clear(): static
+    {
+        $this->loopTools->clear();
+
+        return $this;
+    }
+
     public function tool(Tool $tool): static
     {
         $this->loopTools->registerTool($tool);

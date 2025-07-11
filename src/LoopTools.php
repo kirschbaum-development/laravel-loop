@@ -18,9 +18,40 @@ class LoopTools
         $this->tools = new ToolCollection;
     }
 
+    /**
+     * Add a tool to the registry if not already present (prevents duplicates)
+     */
+    public function addTool(Tool $tool): void
+    {
+        $toolName = $tool->getName();
+
+        if (! $this->tools->contains(function ($existingTool) use ($toolName) {
+            return $existingTool->getName() === $toolName;
+        })) {
+            $this->tools->push($tool);
+        }
+    }
+
+    /**
+     * Remove a tool by name and return success status
+     */
+    public function removeTool(string $name): bool
+    {
+        $initialCount = $this->tools->count();
+
+        $this->tools = $this->tools->reject(function ($tool) use ($name) {
+            return $tool->getName() === $name;
+        });
+
+        return $initialCount > $this->tools->count();
+    }
+
+    /**
+     * Register a tool (alias for addTool)
+     */
     public function registerTool(Tool $tool): void
     {
-        $this->tools->push($tool);
+        $this->addTool($tool);
     }
 
     public function registerToolkit(Toolkit $toolkit): void
@@ -28,7 +59,7 @@ class LoopTools
         $this->toolkits[] = $toolkit;
 
         foreach ($toolkit->getTools() as $tool) {
-            $this->registerTool($tool);
+            $this->addTool($tool);
         }
     }
 
