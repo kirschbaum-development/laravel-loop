@@ -1,6 +1,7 @@
-vendor
-composer.lock
-node_modules
-build
+/.idea
+/build
+/node_modules
+/vendor
+.DS_Store
 .pint.cache
-.idea
+composer.lock
