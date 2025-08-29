@@ -5,6 +5,7 @@ namespace Kirschbaum\Loop\Commands;
 use Illuminate\Console\Command;
 use Kirschbaum\Loop\Commands\Concerns\AuthenticateUsers;
 use Kirschbaum\Loop\Enums\ErrorCode;
+use Kirschbaum\Loop\LoopTools;
 use Kirschbaum\Loop\McpHandler;
 use React\EventLoop\Loop;
 use React\Stream\ReadableResourceStream;
@@ -51,6 +52,8 @@ class LoopMcpServerStartCommand extends Command
         $this->stdin->on('data', function ($data) {
             $this->processData($data);
         });
+
+        $this->registerToolChangeCallback();
 
         if ($this->option('debug')) {
             $this->debug('Laravel Loop MCP server running. Press Ctrl+C or send SIGTERM to stop.');
@@ -132,6 +135,20 @@ class LoopMcpServerStartCommand extends Command
                 report($e);
             }
         }
+    }
+
+    protected function registerToolChangeCallback(): void
+    {
+        $loopTools = app(LoopTools::class);
+
+        $loopTools->onToolsChanged(function () {
+            if ($this->option('debug')) {
+                $this->debug('Tools list changed, sending notification');
+            }
+
+            $notification = $this->mcpHandler->createToolsChangedNotification();
+            $this->stdout->write(json_encode($notification).PHP_EOL);
+        });
     }
 
     protected function debug(string $message): void

@@ -218,7 +218,7 @@ Be aware that if you are exposing your endpoint publicly, you are exposing your 
     'streamable_http' => [
         'middleware' => ['auth:sanctum'],
     ],
-    
+
     'sse' => [
         'middleware' => ['auth:sanctum'],
     ],
@@ -263,6 +263,50 @@ Please note that not all clients support direct SSE connections. For those situa
     }
   }
 }
+```
+
+## Dynamic Tools
+
+Laravel Loop supports registering and removing tools during STDIO sessions. When tools are added or removed, MCP clients automatically receive `tools/list_changed` notifications.
+
+**Important:** This feature is only available for the STDIO transport.
+
+### Example Usage in STDIO
+
+```php
+// Tools can be dynamically managed during STDIO session
+// Clients will receive notifications automatically
+Loop::tool(new CustomTool());
+Loop::removeTool('tool-name');
+```
+
+#### Adding Tools Dynamically
+
+```php
+// Add a single tool at runtime
+Loop::tool(new MyCustomTool());
+
+// Method chaining is supported
+Loop::tool(new ToolOne())
+    ->tool(new ToolTwo());
+```
+
+#### Removing Tools Dynamically
+
+```php
+// Remove a tool by name
+Loop::removeTool('my-custom-tool');
+
+// Method chaining is supported
+Loop::removeTool('tool-one')
+    ->removeTool('tool-two');
+```
+
+#### Clearing All Tools
+
+```php
+// Remove all registered tools and toolkits
+Loop::clear();
 ```
 
 ***

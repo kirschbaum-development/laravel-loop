@@ -55,7 +55,9 @@ class McpHandler
         ];
 
         $this->serverCapabilities = $this->config['capabilities'] ?? [
-            'tools' => $this->listTools(),
+            'tools' => [
+                'listChanged' => true,
+            ],
         ];
     }
 
@@ -108,7 +110,7 @@ class McpHandler
                         'additionalProperties' => false,
                     ],
                 ];
-            })->toArray(),
+            })->values()->toArray(),
         ];
     }
 
@@ -169,6 +171,19 @@ class McpHandler
     public function ping(): array
     {
         return [];
+    }
+
+    /**
+     * Create a tools/list_changed notification
+     *
+     * @return array<string, string>
+     */
+    public function createToolsChangedNotification(): array
+    {
+        return [
+            'jsonrpc' => '2.0',
+            'method' => 'notifications/tools/list_changed',
+        ];
     }
 
     public function handle(array $message): array

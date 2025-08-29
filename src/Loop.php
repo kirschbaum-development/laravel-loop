@@ -51,4 +51,24 @@ class Loop
             ->getTool($name)
             ->build();
     }
+
+    /**
+     * Remove a tool dynamically (persists only within STDIO session)
+     */
+    public function removeTool(string $name): static
+    {
+        $this->loopTools->removeTool($name);
+
+        return $this;
+    }
+
+    /**
+     * Clear all tools and toolkits
+     */
+    public function clear(): static
+    {
+        $this->loopTools->clear();
+
+        return $this;
+    }
 }
